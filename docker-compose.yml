@@ -1,0 +1,75 @@
+# Phylax Syslog Service
+
+services:
+  syslog:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: phylax-syslog
+
+    # Port mapping
+    ports:
+      - "514:514/udp"      # Syslog UDP port
+
+    # Volume mounts
+    volumes:
+      - syslog-logs:/var/log/syslog        # Log storage
+      - ./.env:/app/.env:ro                # Configuration (read-only)
+
+    # Environment variables
+    environment:
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+      - SYSLOG_PORT=514
+      - SYSLOG_LOG_DIR=/var/log/syslog
+      - SYSLOG_FILE_SIZE_LIMIT=52428800
+      - SYSLOG_FLUSH_INTERVAL=5000
+      - SYSLOG_MAX_PROCESSING_DELAY=10000
+      - HEARTBEAT_ENABLED=false
+      # Additional env vars from .env file
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+    # Health check (Docker-level)
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('net').createConnection({port: 514}, ()=>process.exit(0)).on('error', ()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    # Signal handling
+    stop_signal: SIGTERM
+    stop_grace_period: 30s
+
+# Persistent volume for log files
+volumes:
+  syslog-logs:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: size=10G
+
+# Network configuration
+networks:
+  default:
+    driver: bridge

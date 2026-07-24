@@ -1,0 +1,16 @@
+# Auto-Konvertierung für alle Dateien
+* text=auto
+
+# Explizit als Text mit LF (Unix-Standard in Git)
+*.md text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+.env* text eol=lf
+Dockerfile text eol=lf
+
+# Binärdateien
+*.zip binary
+*.png binary
+*.jpg binary
