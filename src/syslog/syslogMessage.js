@@ -205,9 +205,10 @@ class SyslogMessage {
     const tsMatch = rest.match(RFC5424_TIMESTAMP_PATTERN);
     if (!tsMatch) return false;
 
-    const [, year, month, day, hour, minute, second, fractional, tzHour, tzMin, remaining] = tsMatch;
+    // eslint-disable-next-line no-unused-vars
+    const [, year, month, day, hour, minute, second, fractional, _, __, remaining] = tsMatch;
 
-    // Parse timestamp and convert to Date
+    // Parse timestamp and convert to Date (timezone info is in the original timestamp)
     const dateString = `${year}-${month}-${day}T${hour}:${minute}:${second}${fractional ? '.' + fractional : ''}Z`;
     this.timestamp = new Date(dateString);
 
@@ -217,29 +218,16 @@ class SyslogMessage {
 
     this.hostname = parts[0] || this.senderAddress || 'unknown';
 
-    // TAG PROCID MSGID STRUCTURED-DATA MSG
-    // RFC 5424: "-" means not present
-    let tagIdx = 1;
-    let tag = parts[tagIdx] || '-';
+    // RFC 5424 format: HOSTNAME TAG PROCID MSGID STRUCTURED-DATA MSG
+    // "-" means field is not present
+    const tag = parts[1] || '-';
+    this.tag = tag !== '-' ? tag : null;
 
-    // Skip PROCID and MSGID if they exist (they are usually "-")
-    let messageIdx = tagIdx + 1;
-    if (parts[tagIdx + 1] === '-') messageIdx = tagIdx + 2;
-    if (parts[tagIdx + 2] === '-') messageIdx = tagIdx + 3;
-
-    // Extract tag if it's not "-"
-    if (tag !== '-') {
-      this.tag = tag;
-      messageIdx = tagIdx + 1;
-    } else {
-      this.tag = null;
-      messageIdx = tagIdx + 1;
-    }
-
-    // Skip PROCID and MSGID
-    while (messageIdx < parts.length && parts[messageIdx] === '-') {
-      messageIdx++;
-    }
+    // Skip TAG, PROCID, MSGID fields (all are single elements or "-")
+    let messageIdx = 1; // Start after hostname
+    if (parts.length > messageIdx) messageIdx++; // Skip TAG
+    if (parts.length > messageIdx) messageIdx++; // Skip PROCID
+    if (parts.length > messageIdx) messageIdx++; // Skip MSGID
 
     // Skip structured data (starts with '[')
     if (messageIdx < parts.length && parts[messageIdx].startsWith('[')) {
