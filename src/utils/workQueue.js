@@ -70,7 +70,6 @@ class WorkQueue {
     const interval = 100;
     let elapsed = 0;
 
-    // eslint-disable-next-line no-promise-executor-return
     return new Promise((resolve) => {
       const checkInterval = setInterval(() => {
         elapsed += interval;

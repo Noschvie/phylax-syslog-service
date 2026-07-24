@@ -1,5 +1,3 @@
-import js from '@eslint/js';
-import airbnb from 'eslint-config-airbnb-base';
 import importPlugin from 'eslint-plugin-import';
 
 export default [
