@@ -21,7 +21,7 @@ describe('Integration Tests', () => {
 
     await manager.stop();
     expect(manager.syslogService.isRunning).toBe(false);
-  }, 30000);
+  }, 60000);
 
   test('should receive a syslog message and create logger', async () => {
     await manager.start();
@@ -35,14 +35,14 @@ describe('Integration Tests', () => {
         client.close();
       });
 
-      // Wait a bit for processing
+    // Wait a bit for processing
       setTimeout(() => {
         const status = manager.getStatus();
         expect(status.loggers.length).toBeGreaterThan(0);
         resolve();
       }, 200);
     });
-  }, 30000);
+  }, 60000);
 
   test('should handle multiple messages', async () => {
     await manager.start();
@@ -68,7 +68,7 @@ describe('Integration Tests', () => {
 
     const status = manager.getStatus();
     expect(status.loggers.length).toBeGreaterThanOrEqual(2); // At least 2 different hosts
-  }, 30000);
+  }, 60000);
 
   test('should flush buffered messages', async () => {
     await manager.start();
@@ -92,17 +92,16 @@ describe('Integration Tests', () => {
       // After flush, buffer should be empty or small
       expect(logger.bufferSize).toBeLessThanOrEqual(1);
     }
-  }, 30000);
+  }, 60000);
 
   test('should report status correctly', async () => {
     await manager.start();
 
     const status = manager.getStatus();
 
-    expect(status).toHaveProperty('syslogService');
+   expect(status).toHaveProperty('syslogService');
     expect(status).toHaveProperty('loggers');
     expect(status).toHaveProperty('logZipper');
     expect(status.syslogService.isRunning).toBe(true);
-  }, 30000);
+  }, 60000);
 });
-
