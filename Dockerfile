@@ -1,5 +1,5 @@
 # Multi-stage build for smaller image size
-FROM node:24-alpine AS builder
+FROM node:26-alpine AS builder
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ RUN npm ci --only=production && \
     npm cache clean --force
 
 # Production image
-FROM node:18-alpine
+FROM node:26-alpine
 
 WORKDIR /app
 
@@ -24,7 +24,6 @@ COPY --from=builder /app/package*.json ./
 
 # Copy application
 COPY src/ ./src/
-COPY .env .env
 
 # Create log directory
 RUN mkdir -p /var/log/syslog && \
