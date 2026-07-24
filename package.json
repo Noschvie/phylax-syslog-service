@@ -18,9 +18,9 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "jest --coverage",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage --coverageReporters=text",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "test:watch": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage --coverageReporters=text",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "format": "prettier --write 'src/**/*.js'",
@@ -34,30 +34,23 @@
   "author": "Noschvie",
   "license": "MIT",
   "dependencies": {
-    "dotenv": "^16.3.1",
-    "pino": "^8.16.2",
-    "pino-pretty": "^10.2.3",
     "archiver": "^6.0.1",
+    "dotenv": "^16.3.1",
     "ini": "^4.1.1",
-    "node-cron": "^3.0.2"
+    "node-cron": "^3.0.2",
+    "pino": "^8.16.2",
+    "pino-pretty": "^10.2.3"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "eslint": "^8.50.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.28.1",
     "jest": "^29.7.0",
     "nodemon": "^3.0.1",
     "prettier": "^3.0.3",
-    "supertest": "^6.3.3"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "coveragePathIgnorePatterns": [
-      "/node_modules/"
-    ],
-    "testMatch": [
-      "**/test/**/*.test.js"
-    ]
+    "supertest": "^6.3.3",
+    "cross-env": "^7.0.3"
   },
   "prettier": {
     "singleQuote": true,
@@ -79,7 +72,10 @@
     },
     "rules": {
       "no-console": "off",
-      "no-unused-vars": "warn"
+      "no-unused-vars": "warn",
+      "import/extensions": "off",
+      "no-underscore-dangle": "off",
+      "class-methods-use-this": "off"
     }
   }
 }
