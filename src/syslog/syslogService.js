@@ -108,8 +108,8 @@ class SyslogService {
       const rawMessage = buffer.toString('utf-8');
       const receptionTime = new Date();
 
-      // Parse message
-      const message = new SyslogMessage(rawMessage, receptionTime);
+      // Parse message with sender's address for fallback hostname
+      const message = new SyslogMessage(rawMessage, receptionTime, rinfo.address);
 
       if (this.onMessage) {
         this.onMessage(message);

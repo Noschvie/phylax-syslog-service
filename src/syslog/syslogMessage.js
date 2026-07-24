@@ -67,9 +67,10 @@ const ISO8601_TIMESTAMP_PATTERN = /^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\
  * where PRI = Facility * 8 + Severity
  */
 class SyslogMessage {
-  constructor(rawMessage, receptionTime = new Date()) {
+  constructor(rawMessage, receptionTime = new Date(), senderAddress = null) {
     this.rawMessage = rawMessage;
     this.receptionTime = receptionTime;
+    this.senderAddress = senderAddress;
     this.timestamp = null;
     this.hostname = null;
     this.tag = null;
@@ -149,13 +150,13 @@ class SyslogMessage {
     const hostnameMatch = remaining.match(HOSTNAME_PATTERN);
     if (!hostnameMatch) {
       const [firstWord] = remaining.split(/\s+/);
-      this.hostname = firstWord;
+      this.hostname = firstWord || this.senderAddress || 'unknown';
       this.message = remaining;
       return true;
     }
 
     const [, hostname, messageWithTag] = hostnameMatch;
-    this.hostname = hostname;
+    this.hostname = hostname || this.senderAddress || 'unknown';
 
     // Parse tag (usually in format "tag:" or "tag[pid]:")
     const tagMatch = messageWithTag.match(TAG_PATTERN);
@@ -208,13 +209,13 @@ class SyslogMessage {
     const hostnameMatch = remaining.match(HOSTNAME_PATTERN);
     if (!hostnameMatch) {
       const [firstWord] = remaining.split(/\s+/);
-      this.hostname = firstWord;
+      this.hostname = firstWord || this.senderAddress || 'unknown';
       this.message = remaining;
       return true;
     }
 
     const [, hostname, messageWithTag] = hostnameMatch;
-    this.hostname = hostname;
+    this.hostname = hostname || this.senderAddress || 'unknown';
 
     // Parse tag
     const tagMatch = messageWithTag.match(TAG_PATTERN);
@@ -234,7 +235,7 @@ class SyslogMessage {
    * Fallback: treat the entire message as raw
    */
   _parseFallback() {
-    this.hostname = 'unknown';
+    this.hostname = this.senderAddress || 'unknown';
     this.message = this.rawMessage;
     this.tag = null;
     this.timestamp = this.receptionTime;
