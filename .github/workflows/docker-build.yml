@@ -2,11 +2,11 @@ name: Build Docker Image
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, development]
     tags:
       - 'v*'
   pull_request:
-    branches: [main, develop]
+    branches: [main, development]
 
 env:
   REGISTRY: ghcr.io
@@ -24,7 +24,9 @@ jobs:
 
       - name: Set lowercase image name
         id: lowercase
-        run: echo "image_name=${{ github.repository | tr '[:upper:]' '[:lower:]' }}" >> $GITHUB_OUTPUT
+        run: echo "image_name=${REPO,,}" >> $GITHUB_OUTPUT
+        env:
+          REPO: ${{ github.repository }}
         shell: bash
 
       - name: Set up QEMU
