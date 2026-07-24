@@ -54,10 +54,18 @@ class SyslogService {
           '0.0.0.0',
         );
 
-        // Set buffer sizes after binding
+        // Set buffer sizes after binding (if available)
         try {
-          this.socket.setRecvBufferSize(this.config.syslogUdpBufferSize);
-          this.socket.setSendBufferSize(this.config.syslogUdpBufferSize);
+          if (typeof this.socket.setRecvBufferSize === 'function') {
+            this.socket.setRecvBufferSize(this.config.syslogUdpBufferSize);
+          }
+          if (typeof this.socket.setSendBufferSize === 'function') {
+            this.socket.setSendBufferSize(this.config.syslogUdpBufferSize);
+          }
+          if (typeof this.socket.setRecvBufferSize !== 'function' &&
+              typeof this.socket.setSendBufferSize !== 'function') {
+            logger.debug('Buffer size methods not available on this platform');
+          }
         } catch (error) {
           logger.warn('Failed to set buffer sizes', { error: error.message });
         }
