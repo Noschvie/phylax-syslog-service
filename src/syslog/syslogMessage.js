@@ -49,6 +49,18 @@ const LEVEL_NAMES = Object.entries(SyslogLevel).reduce((acc, [name, value]) => {
 // Regex pattern for parsing syslog tag (usually in format "tag:" or "tag[pid]:")
 const TAG_PATTERN = /^([^[\s:]+)(?:\[\d+])?:\s*(.*)$/;
 
+// Regex pattern for extracting priority value
+const PRIORITY_PATTERN = /^<(\d+)>/;
+
+// Regex pattern for RFC 3164 timestamp (Mmm dd hh:mm:ss)
+const RFC3164_TIMESTAMP_PATTERN = /^(\w{3})\s+(\d{1,2})\s+(\d{2}):(\d{2}):(\d{2})\s+(.+)/;
+
+// Regex pattern for hostname and message extraction
+const HOSTNAME_PATTERN = /^(\S+)\s+(.*)$/;
+
+// Regex pattern for ISO 8601 timestamp (YYYY-MM-DD HH:mm:ss,fff)
+const ISO8601_TIMESTAMP_PATTERN = /^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2}),(\d{3})\s+(.+)/;
+
 /**
  * Parse RFC 3164 Syslog message
  * Format: <PRI>HEADER MSG
@@ -93,7 +105,7 @@ class SyslogMessage {
    * Timestamp format: Mmm dd hh:mm:ss (no year)
    */
   _parseRfc3164() {
-    const priMatch = this.rawMessage.match(/^<(\d+)>/);
+    const priMatch = this.rawMessage.match(PRIORITY_PATTERN);
     if (!priMatch) return false;
 
     const priority = parseInt(priMatch[1], 10);
@@ -107,7 +119,7 @@ class SyslogMessage {
     this.levelName = LEVEL_NAMES[this.level] || 'UNKNOWN';
 
     // Parse timestamp (Mmm dd hh:mm:ss)
-    const dateMatch = rest.match(/^(\w{3})\s+(\d{1,2})\s+(\d{2}):(\d{2}):(\d{2})\s+(.+)/);
+    const dateMatch = rest.match(RFC3164_TIMESTAMP_PATTERN);
     if (!dateMatch) return false;
 
     const [, month, day, hour, minute, second, remaining] = dateMatch;
@@ -134,7 +146,7 @@ class SyslogMessage {
     this.timestamp = date;
 
     // Parse hostname and message
-    const hostnameMatch = remaining.match(/^(\S+)\s+(.*)$/);
+    const hostnameMatch = remaining.match(HOSTNAME_PATTERN);
     if (!hostnameMatch) {
       const [firstWord] = remaining.split(/\s+/);
       this.hostname = firstWord;
@@ -164,14 +176,14 @@ class SyslogMessage {
    * Format: <PRI>YYYY-MM-DD HH:mm:ss,fff HOSTNAME TAG MESSAGE
    */
   _parsePhylaxFormat() {
-    const priMatch = this.rawMessage.match(/^<(\d+)>/);
+    const priMatch = this.rawMessage.match(PRIORITY_PATTERN);
     if (!priMatch) return false;
 
     const priority = parseInt(priMatch[1], 10);
     const rest = this.rawMessage.substring(priMatch[0].length);
 
     // Parse ISO 8601 timestamp: 2024-07-24 10:30:45,123
-    const isoMatch = rest.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2}),(\d{3})\s+(.+)/);
+    const isoMatch = rest.match(ISO8601_TIMESTAMP_PATTERN);
     if (!isoMatch) return false;
 
     const [, year, month, day, hour, minute, second, millis, remaining] = isoMatch;
@@ -193,7 +205,7 @@ class SyslogMessage {
     );
 
     // Parse hostname and message
-    const hostnameMatch = remaining.match(/^(\S+)\s+(.*)$/);
+    const hostnameMatch = remaining.match(HOSTNAME_PATTERN);
     if (!hostnameMatch) {
       const [firstWord] = remaining.split(/\s+/);
       this.hostname = firstWord;
