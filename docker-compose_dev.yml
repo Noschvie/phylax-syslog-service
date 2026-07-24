@@ -1,28 +1,15 @@
-# Phylax Syslog Service
+# Phylax Syslog Service - Development
+# Uses pre-built image from GitHub Container Registry
 
 services:
-  syslog:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: phylax-syslog
-
-    # Run as non-root user
+  phylax-syslog:
     user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
-
-    # Port mapping
-    ports:
-      - "514:514/udp"      # Syslog UDP port
-
-    # Volume mounts
-    volumes:
-      - ./volumes/logs:/var/log/syslog        # Log storage
-      - ./.env:/app/.env:ro                # Configuration (read-only)
-
+    image: ghcr.io/noschvie/phylax-syslog-service:development
+    container_name: phylax-syslog
     # Environment variables
     environment:
-      - NODE_ENV=production
-      - LOG_LEVEL=info
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
       - SYSLOG_PORT=514
       - SYSLOG_LOG_DIR=/var/log/syslog
       - SYSLOG_FILE_SIZE_LIMIT=52428800
@@ -30,16 +17,23 @@ services:
       - SYSLOG_MAX_PROCESSING_DELAY=10000
       - HEARTBEAT_ENABLED=false
       # Additional env vars from .env file
+    # Port mapping
+    ports:
+      - "514:514/udp"      # Syslog UDP port
+    # Volume mounts
+    volumes:
+      - ./volumes/logs:/var/log/syslog        # Log storage
+      - ./.env:/app/.env:ro                     # Configuration (read-only)
 
-    # Resource limits
+    # Resource limits (reduced for development)
     deploy:
       resources:
         limits:
-          cpus: '2'
-          memory: 512M
-        reservations:
-          cpus: '0.5'
+          cpus: '1'
           memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
 
     # Restart policy
     restart: unless-stopped
@@ -48,8 +42,8 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "100m"
-        max-file: "3"
+        max-size: "50m"
+        max-file: "2"
 
     # Health check (Docker-level)
     healthcheck:

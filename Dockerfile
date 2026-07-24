@@ -27,14 +27,12 @@ COPY src/ ./src/
 
 # Create log directory
 RUN mkdir -p /var/log/syslog && \
-    chmod 755 /var/log/syslog
+    chmod 777 /var/log/syslog
 
 # Create non-root user for security
-RUN addgroup -g 1001 syslog && \
-    adduser -u 1001 -G syslog -s /sbin/nologin -D syslog && \
-    chown -R syslog:syslog /var/log/syslog /app
-
-USER syslog
+RUN addgroup -g 1000 appgroup && \
+    adduser -u 1000 -G appgroup -s /sbin/nologin -D appuser && \
+    chown -R appuser:appgroup /app
 
 # Expose syslog UDP port
 EXPOSE 514/udp
@@ -43,7 +41,7 @@ EXPOSE 514/udp
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD node -e "require('net').createConnection({port: 514}, ()=>process.exit(0)).on('error', ()=>process.exit(1))" || exit 1
 
-# Use dumb-init to handle signals
+# Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start application
