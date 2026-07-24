@@ -46,6 +46,9 @@ const LEVEL_NAMES = Object.entries(SyslogLevel).reduce((acc, [name, value]) => {
   return acc;
 }, {});
 
+// Regex pattern for parsing syslog tag (usually in format "tag:" or "tag[pid]:")
+const TAG_PATTERN = /^([^[\s:]+)(?:\[\d+])?:\s*(.*)$/;
+
 /**
  * Parse RFC 3164 Syslog message
  * Format: <PRI>HEADER MSG
@@ -143,7 +146,7 @@ class SyslogMessage {
     this.hostname = hostname;
 
     // Parse tag (usually in format "tag:" or "tag[pid]:")
-    const tagMatch = messageWithTag.match(/^([^\s:[\]]+)(?:\[\d+\])?:\s*(.*)$/);
+    const tagMatch = messageWithTag.match(TAG_PATTERN);
     if (tagMatch) {
       const [, tag, message] = tagMatch;
       this.tag = tag;
@@ -202,7 +205,7 @@ class SyslogMessage {
     this.hostname = hostname;
 
     // Parse tag
-    const tagMatch = messageWithTag.match(/^([^\s:[\]]+)(?:\[\d+\])?:\s*(.*)$/);
+    const tagMatch = messageWithTag.match(TAG_PATTERN);
     if (tagMatch) {
       const [, tag, message] = tagMatch;
       this.tag = tag;
