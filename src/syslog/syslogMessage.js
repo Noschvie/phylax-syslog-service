@@ -223,14 +223,21 @@ class SyslogMessage {
     const tag = parts[1] || '-';
     this.tag = tag !== '-' ? tag : null;
 
-    // Skip TAG, PROCID, MSGID fields (all are single elements or "-")
+    // Skip TAG, PROCID, MSGID fields (always present, can be "-")
     let messageIdx = 1; // Start after hostname
-    if (parts.length > messageIdx) messageIdx++; // Skip TAG
-    if (parts.length > messageIdx) messageIdx++; // Skip PROCID
-    if (parts.length > messageIdx) messageIdx++; // Skip MSGID
+    messageIdx++; // Skip TAG
+    messageIdx++; // Skip PROCID
+    messageIdx++; // Skip MSGID
 
-    // Skip structured data (starts with '[')
-    if (messageIdx < parts.length && parts[messageIdx].startsWith('[')) {
+    // Skip STRUCTURED-DATA if it's "-" or starts with "["
+    if (messageIdx < parts.length) {
+      if (parts[messageIdx] === '-' || parts[messageIdx].startsWith('[')) {
+        messageIdx++;
+      }
+    }
+
+    // Skip any additional '[...]' structured data blocks that might be present
+    while (messageIdx < parts.length && parts[messageIdx].startsWith('[')) {
       messageIdx++;
     }
 
