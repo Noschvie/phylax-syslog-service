@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import archiver from 'archiver';
+import { ZipArchive } from 'archiver';
 import { getLogger } from '../utils/logger.js';
 import WorkQueue from '../utils/workQueue.js';
 
@@ -68,7 +68,7 @@ class LogZipper {
 
       // Create output stream
       const output = fs.createWriteStream(zipPath);
-      const archive = archiver('zip', { zlib: { level: 9 } });
+      const archive = new ZipArchive({ zlib: { level: 9 } });
 
       return new Promise((resolve, reject) => {
         output.on('close', () => {
