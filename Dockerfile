@@ -30,8 +30,8 @@ RUN mkdir -p /var/log/syslog && \
     chmod 777 /var/log/syslog
 
 # Create non-root user for security
-RUN addgroup -g 1000 appgroup && \
-    adduser -u 1000 -G appgroup -s /sbin/nologin -D appuser && \
+RUN addgroup -g 1001 appgroup && \
+    adduser -u 1001 -G appgroup -s /sbin/nologin -D appuser && \
     chown -R appuser:appgroup /app
 
 # Expose syslog UDP port
