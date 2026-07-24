@@ -23,16 +23,9 @@ class SyslogService {
   start() {
     return new Promise((resolve, reject) => {
       try {
-        this.socket = dgram.createSocket('udp4');
-
-        // Enable SO_REUSEADDR to allow port reuse
-        if (typeof this.socket.setOption === 'function') {
-          try {
-            this.socket.setOption('SO_REUSEADDR', 1);
-          } catch (error) {
-            logger.debug('SO_REUSEADDR not available', { error: error.message });
-          }
-        }
+        // SO_REUSEADDR is set via the createSocket option, not via a
+        // setOption() call - dgram.Socket has no such method.
+        this.socket = dgram.createSocket({ type: 'udp4', reuseAddr: true });
 
         this.socket.on('message', (buffer, rinfo) => {
           this._handleMessage(buffer, rinfo);
@@ -45,6 +38,12 @@ class SyslogService {
         this.socket.on('listening', () => {
           const addr = this.socket.address();
           logger.info(`Syslog service listening on ${addr.address}:${addr.port}`);
+
+          // Buffer sizes can only be set once the socket is actually bound -
+          // bind() is asynchronous, so this must happen here and not right
+          // after calling bind() below.
+          this._configureBufferSizes();
+
           this.isRunning = true;
           resolve();
         });
@@ -53,34 +52,42 @@ class SyslogService {
           this.config.syslogPort,
           '0.0.0.0',
         );
-
-        // Set buffer sizes after binding (if available)
-        try {
-          // Try to set SO_RCVBUF and SO_SNDBUF socket options
-          if (typeof this.socket.setOption === 'function') {
-            try {
-              this.socket.setOption(0, 'SO_RCVBUF', this.config.syslogUdpBufferSize);
-              logger.debug('SO_RCVBUF set successfully', { size: this.config.syslogUdpBufferSize });
-            } catch (error) {
-              logger.debug('SO_RCVBUF not supported', { error: error.message });
-            }
-            try {
-              this.socket.setOption(0, 'SO_SNDBUF', this.config.syslogUdpBufferSize);
-              logger.debug('SO_SNDBUF set successfully', { size: this.config.syslogUdpBufferSize });
-            } catch (error) {
-              logger.debug('SO_SNDBUF not supported', { error: error.message });
-            }
-          } else {
-            logger.debug('socket.setOption() not available on this platform');
-          }
-        } catch (error) {
-          logger.debug('Error configuring socket buffer sizes', { error: error.message });
-        }
       } catch (error) {
         logger.error('Failed to start service', { error: error.message });
         reject(error);
       }
     });
+  }
+
+  /**
+   * Set SO_RCVBUF / SO_SNDBUF on the bound socket if a buffer size was
+   * configured. Uses the real Node.js dgram API instead of the
+   * platform-level setOption() method (which dgram.Socket does not have).
+   */
+  _configureBufferSizes() {
+    if (!this.config.syslogUdpBufferSize) {
+      return;
+    }
+
+    try {
+      this.socket.setRecvBufferSize(this.config.syslogUdpBufferSize);
+      logger.debug('SO_RCVBUF set successfully', {
+        requested: this.config.syslogUdpBufferSize,
+        actual: this.socket.getRecvBufferSize(),
+      });
+    } catch (error) {
+      logger.debug('SO_RCVBUF not supported', { error: error.message });
+    }
+
+    try {
+      this.socket.setSendBufferSize(this.config.syslogUdpBufferSize);
+      logger.debug('SO_SNDBUF set successfully', {
+        requested: this.config.syslogUdpBufferSize,
+        actual: this.socket.getSendBufferSize(),
+      });
+    } catch (error) {
+      logger.debug('SO_SNDBUF not supported', { error: error.message });
+    }
   }
 
   /**
