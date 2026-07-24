@@ -33,7 +33,9 @@ class SyslogLogger {
       return;
     }
 
-    const formattedLine = message.getFormattedLine();
+    const formattedLine = this.config.syslogLogFormat === 'extended'
+      ? message.getExtendedFormattedLine()
+      : message.getFormattedLine();
     this.buffer.push(formattedLine);
 
     // Check if rotation needed

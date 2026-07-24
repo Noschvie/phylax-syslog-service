@@ -74,6 +74,9 @@ const config = {
     'SYSLOG_UNZIPPED_FILE_SIZE_LIMIT',
   ),
   syslogDateTimeFormat: process.env.SYSLOG_DATE_TIME_FORMAT || 'yyyy-MM-dd HH:mm:ss.fff',
+  syslogLogFormat: process.env.SYSLOG_LOG_FORMAT || 'standard',
+  // standard: TIMESTAMP HOSTNAME [TAG] MESSAGE
+  // extended: RECEPTION_TIME SENDER_ADDRESS TIMESTAMP HOSTNAME [TAG] MESSAGE
 
   // Syslog Service Timings
   syslogFlushInterval: validatePositiveNumber(

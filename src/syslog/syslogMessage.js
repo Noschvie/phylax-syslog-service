@@ -61,6 +61,9 @@ const HOSTNAME_PATTERN = /^(\S+)\s+(.*)$/;
 // Regex pattern for ISO 8601 timestamp (YYYY-MM-DD HH:mm:ss,fff)
 const ISO8601_TIMESTAMP_PATTERN = /^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2}),(\d{3})\s+(.+)/;
 
+// Regex pattern for RFC 5424 timestamp (2026-07-24T20:17:27.953000+01:00)
+const RFC5424_TIMESTAMP_PATTERN = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?([+-]\d{2}):(\d{2})\s+(.+)/;
+
 /**
  * Parse RFC 3164 Syslog message
  * Format: <PRI>HEADER MSG
@@ -87,12 +90,15 @@ class SyslogMessage {
 
   _parse() {
     try {
-      // Try RFC 3164 format first
-      if (!this._parseRfc3164()) {
-        // Try Phylax extended format (ISO 8601)
-        if (!this._parsePhylaxFormat()) {
-          // Fallback to raw message
-          this._parseFallback();
+      // Try RFC 5424 format first (most specific)
+      if (!this._parseRfc5424()) {
+        // Try RFC 3164 format
+        if (!this._parseRfc3164()) {
+          // Try Phylax extended format (ISO 8601)
+          if (!this._parsePhylaxFormat()) {
+            // Fallback to raw message
+            this._parseFallback();
+          }
         }
       }
     } catch (error) {
@@ -168,6 +174,80 @@ class SyslogMessage {
       this.tag = null;
       this.message = messageWithTag;
     }
+
+    return true;
+  }
+
+  /**
+   * Parse RFC 5424 format: <PRI>VERSION TIMESTAMP HOSTNAME TAG PROCID MSGID STRUCTURED-DATA MSG
+   * Example: <134>1 2026-07-24T20:17:27.953000+01:00 tasmota-9FBF00-7936 tasmota - - - MQT: ...
+   */
+  _parseRfc5424() {
+    const priMatch = this.rawMessage.match(PRIORITY_PATTERN);
+    if (!priMatch) return false;
+
+    const priority = parseInt(priMatch[1], 10);
+    let rest = this.rawMessage.substring(priMatch[0].length).trim();
+
+    // Extract priority components
+    this.priority = priority;
+    this.facility = Math.floor(priority / 8);
+    this.level = priority % 8;
+    this.facilityName = FACILITY_NAMES[this.facility] || 'UNKNOWN';
+    this.levelName = LEVEL_NAMES[this.level] || 'UNKNOWN';
+
+    // Skip version (usually "1")
+    const versionMatch = rest.match(/^(\d+)\s+(.+)/);
+    if (!versionMatch) return false;
+    rest = versionMatch[2];
+
+    // Parse RFC 5424 timestamp with timezone
+    const tsMatch = rest.match(RFC5424_TIMESTAMP_PATTERN);
+    if (!tsMatch) return false;
+
+    const [, year, month, day, hour, minute, second, fractional, tzHour, tzMin, remaining] = tsMatch;
+
+    // Parse timestamp and convert to Date
+    const dateString = `${year}-${month}-${day}T${hour}:${minute}:${second}${fractional ? '.' + fractional : ''}Z`;
+    this.timestamp = new Date(dateString);
+
+    // Parse hostname, tag, procid, msgid, and message
+    const parts = remaining.trim().split(/\s+/);
+    if (parts.length < 1) return false;
+
+    this.hostname = parts[0] || this.senderAddress || 'unknown';
+
+    // TAG PROCID MSGID STRUCTURED-DATA MSG
+    // RFC 5424: "-" means not present
+    let tagIdx = 1;
+    let tag = parts[tagIdx] || '-';
+
+    // Skip PROCID and MSGID if they exist (they are usually "-")
+    let messageIdx = tagIdx + 1;
+    if (parts[tagIdx + 1] === '-') messageIdx = tagIdx + 2;
+    if (parts[tagIdx + 2] === '-') messageIdx = tagIdx + 3;
+
+    // Extract tag if it's not "-"
+    if (tag !== '-') {
+      this.tag = tag;
+      messageIdx = tagIdx + 1;
+    } else {
+      this.tag = null;
+      messageIdx = tagIdx + 1;
+    }
+
+    // Skip PROCID and MSGID
+    while (messageIdx < parts.length && parts[messageIdx] === '-') {
+      messageIdx++;
+    }
+
+    // Skip structured data (starts with '[')
+    if (messageIdx < parts.length && parts[messageIdx].startsWith('[')) {
+      messageIdx++;
+    }
+
+    // Rest is the message
+    this.message = parts.slice(messageIdx).join(' ') || '';
 
     return true;
   }
@@ -258,6 +338,7 @@ class SyslogMessage {
 
   /**
    * Get a formatted log line (for writing to file)
+   * Format: TIMESTAMP HOSTNAME [TAG] MESSAGE
    */
   getFormattedLine() {
     const timestamp = this.timestamp
@@ -265,7 +346,27 @@ class SyslogMessage {
       : new Date(this.receptionTime).toISOString().replace('T', ' ').substring(0, 23);
 
     const tag = this.tag ? `[${this.tag}]` : '';
-    return `${timestamp} ${this.hostname} ${tag} ${this.message}`;
+    return `${timestamp} ${this.hostname} ${tag} ${this.message}`.trim();
+  }
+
+  /**
+   * Get an extended formatted log line with reception time and sender address
+   * Format: RECEPTION_TIME SENDER_ADDRESS TIMESTAMP HOSTNAME [TAG] MESSAGE
+   * Useful for debugging message routing and delays
+   */
+  getExtendedFormattedLine() {
+    const receptionTimestamp = this.receptionTime instanceof Date
+      ? this.receptionTime.toISOString().replace('T', ' ').substring(0, 23)
+      : new Date(this.receptionTime).toISOString().replace('T', ' ').substring(0, 23);
+
+    const messageTimestamp = this.timestamp
+      ? this.timestamp.toISOString().replace('T', ' ').substring(0, 23)
+      : receptionTimestamp;
+
+    const senderAddr = this.senderAddress || '-';
+    const tag = this.tag ? `[${this.tag}]` : '';
+
+    return `${receptionTimestamp} ${senderAddr} ${messageTimestamp} ${this.hostname} ${tag} ${this.message}`.trim();
   }
 
   /**
