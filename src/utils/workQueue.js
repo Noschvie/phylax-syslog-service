@@ -47,6 +47,7 @@ class WorkQueue {
   /**
    * Stop processing queue gracefully
    * Waits for the current task to complete, then stops
+   * Safe to call multiple times (idempotent)
    */
   async stop() {
     logger.info(`${this.name}: Stopping...`);
@@ -66,7 +67,7 @@ class WorkQueue {
    * Wait for processing to complete with timeout
    */
   async _waitForProcessing() {
-    const timeout = 30000;
+    const timeout = 60000; // 60 seconds to match test timeout
     const interval = 100;
     let elapsed = 0;
 

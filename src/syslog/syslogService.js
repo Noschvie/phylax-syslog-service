@@ -14,6 +14,7 @@ class SyslogService {
     this.onMessage = onMessage; // Callback when message received
     this.socket = null;
     this.isRunning = false;
+    this.isClosing = false;
   }
 
   /**
@@ -23,6 +24,15 @@ class SyslogService {
     return new Promise((resolve, reject) => {
       try {
         this.socket = dgram.createSocket('udp4');
+
+        // Enable SO_REUSEADDR to allow port reuse
+        if (typeof this.socket.setOption === 'function') {
+          try {
+            this.socket.setOption('SO_REUSEADDR', 1);
+          } catch (error) {
+            logger.debug('SO_REUSEADDR not available', { error: error.message });
+          }
+        }
 
         this.socket.on('message', (buffer, rinfo) => {
           this._handleMessage(buffer, rinfo);
@@ -43,6 +53,14 @@ class SyslogService {
           this.config.syslogPort,
           '0.0.0.0',
         );
+
+        // Set buffer sizes after binding
+        try {
+          this.socket.setRecvBufferSize(this.config.syslogUdpBufferSize);
+          this.socket.setSendBufferSize(this.config.syslogUdpBufferSize);
+        } catch (error) {
+          logger.warn('Failed to set buffer sizes', { error: error.message });
+        }
       } catch (error) {
         logger.error('Failed to start service', { error: error.message });
         reject(error);
@@ -55,14 +73,27 @@ class SyslogService {
    */
   stop() {
     return new Promise((resolve) => {
-      if (!this.socket) {
+      // Already stopped or closing
+      if (!this.socket || this.isClosing) {
         resolve();
         return;
       }
 
+      this.isClosing = true;
       this.isRunning = false;
+
+      // Set a timeout in case socket.close() hangs
+      const closeTimeout = setTimeout(() => {
+        logger.warn('Socket close timeout, forcing shutdown');
+        this.isClosing = false;
+        this.socket = null;
+        resolve();
+      }, 5000);
+
       this.socket.close(() => {
+        clearTimeout(closeTimeout);
         logger.info('Syslog service stopped');
+        this.isClosing = false;
         this.socket = null;
         resolve();
       });

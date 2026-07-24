@@ -5,13 +5,19 @@ import config from '../src/config.js';
 describe('Integration Tests', () => {
   let manager = null;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     manager = new SyslogManager(config);
+    // Wait for previous socket to fully close before starting new one
+    await new Promise((resolve) => setTimeout(resolve, 500));
   });
 
   afterEach(async () => {
     if (manager) {
       await manager.stop();
+      // Verify it actually stopped
+      expect(manager.syslogService.isRunning).toBe(false);
+      // Give socket time to fully close
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   });
 
@@ -19,8 +25,8 @@ describe('Integration Tests', () => {
     await manager.start();
     expect(manager.syslogService.isRunning).toBe(true);
 
-    await manager.stop();
-    expect(manager.syslogService.isRunning).toBe(false);
+    // Don't manually stop here - let afterEach handle cleanup
+    // This prevents double-stop issues
   }, 180000);
 
   test('should receive a syslog message and create logger', async () => {

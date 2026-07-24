@@ -14,6 +14,7 @@ class LogZipper {
   constructor(config) {
     this.config = config;
     this.workQueue = new WorkQueue('LogZipperQueue');
+    this.isStopped = false;
   }
 
   /**
@@ -26,8 +27,15 @@ class LogZipper {
 
   /**
    * Stop the zipper service gracefully
+   * Safe to call multiple times (idempotent)
    */
   async stop() {
+    if (this.isStopped) {
+      logger.debug('Log zipper already stopped');
+      return;
+    }
+    this.isStopped = true;
+
     await this.workQueue.stop();
     logger.info('Log zipper stopped');
   }
