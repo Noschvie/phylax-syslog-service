@@ -10,7 +10,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository | downcase }}
 
 jobs:
   build:
@@ -22,6 +21,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4.2.0
+
+      - name: Set lowercase image name
+        id: lowercase
+        run: echo "image_name=${{ github.repository | tr '[:upper:]' '[:lower:]' }}" >> $GITHUB_OUTPUT
+        shell: bash
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.2.0
@@ -41,7 +45,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5.6.0
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ steps.lowercase.outputs.image_name }}
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
@@ -57,5 +61,5 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ steps.lowercase.outputs.image_name }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ steps.lowercase.outputs.image_name }}:buildcache,mode=max
