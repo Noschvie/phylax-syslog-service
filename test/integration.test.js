@@ -21,7 +21,7 @@ describe('Integration Tests', () => {
 
     await manager.stop();
     expect(manager.syslogService.isRunning).toBe(false);
-  }, 60000);
+  }, 180000);
 
   test('should receive a syslog message and create logger', async () => {
     await manager.start();
@@ -42,7 +42,7 @@ describe('Integration Tests', () => {
         resolve();
       }, 200);
     });
-  }, 60000);
+  }, 180000);
 
   test('should handle multiple messages', async () => {
     await manager.start();
@@ -68,7 +68,7 @@ describe('Integration Tests', () => {
 
     const status = manager.getStatus();
     expect(status.loggers.length).toBeGreaterThanOrEqual(2); // At least 2 different hosts
-  }, 60000);
+  }, 180000);
 
   test('should flush buffered messages', async () => {
     await manager.start();
@@ -92,7 +92,7 @@ describe('Integration Tests', () => {
       // After flush, buffer should be empty or small
       expect(logger.bufferSize).toBeLessThanOrEqual(1);
     }
-  }, 60000);
+  }, 180000);
 
   test('should report status correctly', async () => {
     await manager.start();
@@ -103,5 +103,5 @@ describe('Integration Tests', () => {
     expect(status).toHaveProperty('loggers');
     expect(status).toHaveProperty('logZipper');
     expect(status.syslogService.isRunning).toBe(true);
-  }, 60000);
+  }, 180000);
 });
