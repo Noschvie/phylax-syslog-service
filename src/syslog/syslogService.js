@@ -56,18 +56,25 @@ class SyslogService {
 
         // Set buffer sizes after binding (if available)
         try {
-          if (typeof this.socket.setRecvBufferSize === 'function') {
-            this.socket.setRecvBufferSize(this.config.syslogUdpBufferSize);
-          }
-          if (typeof this.socket.setSendBufferSize === 'function') {
-            this.socket.setSendBufferSize(this.config.syslogUdpBufferSize);
-          }
-          if (typeof this.socket.setRecvBufferSize !== 'function' &&
-              typeof this.socket.setSendBufferSize !== 'function') {
-            logger.debug('Buffer size methods not available on this platform');
+          // Try to set SO_RCVBUF and SO_SNDBUF socket options
+          if (typeof this.socket.setOption === 'function') {
+            try {
+              this.socket.setOption(0, 'SO_RCVBUF', this.config.syslogUdpBufferSize);
+              logger.debug('SO_RCVBUF set successfully', { size: this.config.syslogUdpBufferSize });
+            } catch (error) {
+              logger.debug('SO_RCVBUF not supported', { error: error.message });
+            }
+            try {
+              this.socket.setOption(0, 'SO_SNDBUF', this.config.syslogUdpBufferSize);
+              logger.debug('SO_SNDBUF set successfully', { size: this.config.syslogUdpBufferSize });
+            } catch (error) {
+              logger.debug('SO_SNDBUF not supported', { error: error.message });
+            }
+          } else {
+            logger.debug('socket.setOption() not available on this platform');
           }
         } catch (error) {
-          logger.warn('Failed to set buffer sizes', { error: error.message });
+          logger.debug('Error configuring socket buffer sizes', { error: error.message });
         }
       } catch (error) {
         logger.error('Failed to start service', { error: error.message });
