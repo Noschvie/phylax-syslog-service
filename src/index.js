@@ -1,8 +1,10 @@
 import logger from './utils/logger.js';
 import config from './config.js';
 import SyslogManager from './syslog/syslogManager.js';
+import HeartbeatSender from './heartbeat/heartbeatSender.js';
 
 let manager = null;
+let heartbeatSender = null;
 let flushInterval = null;
 
 /**
@@ -14,6 +16,11 @@ async function gracefulShutdown(signal) {
   // Clear flush interval
   if (flushInterval) {
     clearInterval(flushInterval);
+  }
+
+  // Stop heartbeat sender
+  if (heartbeatSender) {
+    await heartbeatSender.stop();
   }
 
   // Stop manager
@@ -59,6 +66,10 @@ async function main() {
     // Create and start manager
     manager = new SyslogManager(config);
     await manager.start();
+
+    // Create and start heartbeat sender
+    heartbeatSender = new HeartbeatSender(config);
+    await heartbeatSender.start();
 
     // Set up periodic flush interval
     flushInterval = setInterval(async () => {
