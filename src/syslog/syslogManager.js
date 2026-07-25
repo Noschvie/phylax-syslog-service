@@ -101,10 +101,8 @@ class SyslogManager {
       let syslogLogger = this.loggers.get(loggerKey);
 
       if (!syslogLogger) {
-        syslogLogger = new SyslogLogger(
-          this.config,
-          loggerKey,
-          (filePath) => this.logZipper.queueForCompression(filePath),
+        syslogLogger = new SyslogLogger(this.config, loggerKey, (filePath) =>
+          this.logZipper.queueForCompression(filePath),
         );
         this.loggers.set(loggerKey, syslogLogger);
         logger.info(`Created logger for: ${loggerKey}`);

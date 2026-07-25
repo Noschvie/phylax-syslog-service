@@ -33,9 +33,10 @@ class SyslogLogger {
       return;
     }
 
-    const formattedLine = this.config.syslogLogFormat === 'extended'
-      ? message.getExtendedFormattedLine()
-      : message.getFormattedLine();
+    const formattedLine =
+      this.config.syslogLogFormat === 'extended'
+        ? message.getExtendedFormattedLine()
+        : message.getFormattedLine();
     this.buffer.push(formattedLine);
 
     // Check if rotation needed
@@ -104,8 +105,7 @@ class SyslogLogger {
     }
 
     // Check for size-based rotation
-    if (this.currentFileSize + this._estimateBufferSize()
-        > this.config.syslogFileSizeLimit) {
+    if (this.currentFileSize + this._estimateBufferSize() > this.config.syslogFileSizeLimit) {
       logger.info(`${this.name}: File size limit reached, rotating file`);
       this._rotateFile();
     }

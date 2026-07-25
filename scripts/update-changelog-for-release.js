@@ -28,9 +28,7 @@ if (!version) {
 // Extract date from version: v2026.07.07 -> 2026-07-07
 const dateMatch = version.match(/v?(\d{4})\.(\d{2})\.(\d{2})/);
 if (!dateMatch) {
-  console.error(
-    `❌ Error: Invalid version format "${version}" (expected: v2026.07.07)`
-  );
+  console.error(`❌ Error: Invalid version format "${version}" (expected: v2026.07.07)`);
   process.exit(1);
 }
 
@@ -55,9 +53,7 @@ content = content.replace(/\r\n/g, '\n');
 const unreleasePattern = /^Unreleased\s*\n-+\s*\n/m;
 
 if (!unreleasePattern.test(content)) {
-  console.error(
-    '❌ Error: Could not find "Unreleased" section in CHANGELOG.md'
-  );
+  console.error('❌ Error: Could not find "Unreleased" section in CHANGELOG.md');
   console.error('Expected format:');
   console.error('Unreleased');
   console.error('----------');
@@ -68,7 +64,7 @@ if (!unreleasePattern.test(content)) {
 // Keep "Unreleased" at the top, add new dated section below it
 content = content.replace(
   unreleasePattern,
-  `Unreleased\n----------\n\n${releaseDate}\n${'-'.repeat(releaseDate.length)}\n\n`
+  `Unreleased\n----------\n\n${releaseDate}\n${'-'.repeat(releaseDate.length)}\n\n`,
 );
 
 // Verify the replacement was made

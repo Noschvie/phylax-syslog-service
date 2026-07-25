@@ -48,10 +48,7 @@ class SyslogService {
           resolve();
         });
 
-        this.socket.bind(
-          this.config.syslogPort,
-          '0.0.0.0',
-        );
+        this.socket.bind(this.config.syslogPort, '0.0.0.0');
       } catch (error) {
         logger.error('Failed to start service', { error: error.message });
         reject(error);

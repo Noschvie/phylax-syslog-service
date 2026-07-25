@@ -59,10 +59,12 @@ const RFC3164_TIMESTAMP_PATTERN = /^(\w{3})\s+(\d{1,2})\s+(\d{2}):(\d{2}):(\d{2}
 const HOSTNAME_PATTERN = /^(\S+)\s+(.*)$/;
 
 // Regex pattern for ISO 8601 timestamp (YYYY-MM-DD HH:mm:ss,fff)
-const ISO8601_TIMESTAMP_PATTERN = /^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2}),(\d{3})\s+(.+)/;
+const ISO8601_TIMESTAMP_PATTERN =
+  /^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2}),(\d{3})\s+(.+)/;
 
 // Regex pattern for RFC 5424 timestamp (2026-07-24T20:17:27.953000+01:00)
-const RFC5424_TIMESTAMP_PATTERN = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?([+-]\d{2}):(\d{2})\s+(.+)/;
+const RFC5424_TIMESTAMP_PATTERN =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?([+-]\d{2}):(\d{2})\s+(.+)/;
 
 /**
  * Parse RFC 3164 Syslog message
@@ -326,8 +328,20 @@ class SyslogMessage {
    * Helper to get month index from month name (0-11)
    */
   _getMonthIndex(monthName) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return months.indexOf(monthName);
   }
 
@@ -350,9 +364,10 @@ class SyslogMessage {
    * Useful for debugging message routing and delays
    */
   getExtendedFormattedLine() {
-    const receptionTimestamp = this.receptionTime instanceof Date
-      ? this.receptionTime.toISOString().replace('T', ' ').substring(0, 23)
-      : new Date(this.receptionTime).toISOString().replace('T', ' ').substring(0, 23);
+    const receptionTimestamp =
+      this.receptionTime instanceof Date
+        ? this.receptionTime.toISOString().replace('T', ' ').substring(0, 23)
+        : new Date(this.receptionTime).toISOString().replace('T', ' ').substring(0, 23);
 
     const messageTimestamp = this.timestamp
       ? this.timestamp.toISOString().replace('T', ' ').substring(0, 23)
@@ -370,9 +385,8 @@ class SyslogMessage {
   toJSON() {
     return {
       timestamp: this.timestamp?.toISOString(),
-      receptionTime: this.receptionTime instanceof Date
-        ? this.receptionTime.toISOString()
-        : this.receptionTime,
+      receptionTime:
+        this.receptionTime instanceof Date ? this.receptionTime.toISOString() : this.receptionTime,
       hostname: this.hostname,
       tag: this.tag,
       message: this.message,

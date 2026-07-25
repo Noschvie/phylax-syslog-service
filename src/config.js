@@ -102,8 +102,10 @@ const config = {
     0,
   ),
   syslogNoDelayCheckLoggers: (
-    process.env.SYSLOG_NO_DELAY_CHECK_LOGGERS || 'VipifMessageRecorder1,VipifMessageRecorder2'
-  ).split(',').map((s) => s.trim()),
+    process.env.SYSLOG_NO_DELAY_CHECK_LOGGERS
+  )
+    .split(',')
+    .map((s) => s.trim()),
 
   // Heartbeat Monitoring (Optional)
   heartbeatEnabled: validateBoolean(process.env.HEARTBEAT_ENABLED || 'false'),
