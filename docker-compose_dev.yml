@@ -6,6 +6,9 @@ services:
     user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
     image: ghcr.io/noschvie/phylax-syslog-service:development
     container_name: phylax-syslog
+    # Explicitly load environment from .env file
+    env_file:
+      - .env
     # Environment variables
     # All configuration comes from .env file (mounted read-only)
     environment:
@@ -36,7 +39,6 @@ services:
     # Volume mounts
     volumes:
       - ./volumes/logs:/var/log/syslog        # Log storage
-      - ./.env:/app/.env:ro                     # Configuration (read-only)
 
     # Resource limits (reduced for development)
     deploy:

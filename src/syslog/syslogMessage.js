@@ -226,11 +226,22 @@ class SyslogMessage {
     if (!tsMatch) return false;
 
     // eslint-disable-next-line no-unused-vars
-    const [, year, month, day, hour, minute, second, fractional, _, __, remaining] = tsMatch;
+    const [, year, month, day, hour, minute, second, fractional, tzHours, tzMinutes, remaining] = tsMatch;
 
-    // Parse timestamp and convert to Date (timezone info is in the original timestamp)
+    // Parse timestamp with timezone offset
+    // RFC 5424 timestamp includes timezone like: 2026-07-25T15:13:15+02:00
+    // We need to convert from the timezone-aware time to UTC for storage
+    const tzOffsetMinutes = (parseInt(tzHours, 10) * 60 + parseInt(tzMinutes, 10));
+
+    // Create date from the components (treating them as UTC, then offset)
     const dateString = `${year}-${month}-${day}T${hour}:${minute}:${second}${fractional ? '.' + fractional : ''}Z`;
-    this.timestamp = new Date(dateString);
+    let parsedDate = new Date(dateString);
+
+    // Adjust for timezone offset (subtract the offset to get UTC)
+    // If timestamp says +02:00, we subtract 2 hours to get UTC
+    parsedDate = new Date(parsedDate.getTime() - (tzOffsetMinutes * 60 * 1000));
+
+    this.timestamp = parsedDate;
 
     // Parse hostname, tag, procid, msgid, and message
     const parts = remaining.trim().split(/\s+/);

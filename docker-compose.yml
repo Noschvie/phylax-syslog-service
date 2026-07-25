@@ -9,15 +9,14 @@ services:
 
     # Run as non-root user
     user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
-
+    env_file:
+      - .env
     # Port mapping
     ports:
       - "514:514/udp"      # Syslog UDP port
-
     # Volume mounts
     volumes:
       - ./volumes/logs:/var/log/syslog        # Log storage
-      - ./.env:/app/.env:ro                # Configuration (read-only)
 
     # Environment variables
     # All configuration comes from .env file (mounted read-only)
