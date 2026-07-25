@@ -233,7 +233,7 @@ class SyslogMessage {
 **Delay Checking:**
 - Compare: `receptionTime - creationTime`
 - If exceeds `maxProcessingDelay` → log warning
-- Ignore delay check for specific logger names (e.g., "VipifMessageRecorder")
+- Ignore delay check for specific logger names (e.g., "MessageRecorder")
 
 **Interface:**
 ```javascript
@@ -304,7 +304,7 @@ SYSLOG_DATE_TIME_FORMAT=yyyy-MM-dd HH:mm:ss.fff
 # Delay Checking
 SYSLOG_MAX_PROCESSING_DELAY=10000      # 10 seconds
 SYSLOG_MAX_RECEPTION_DELAY=2000        # 2 seconds
-SYSLOG_NO_DELAY_CHECK_LOGGERS=VipifMessageRecorder1,VipifMessageRecorder2
+SYSLOG_NO_DELAY_CHECK_LOGGERS=
 
 # Day Switch
 SYSLOG_DAY_SWITCH_MESSAGE_DELAY=15000  # 15 seconds
@@ -513,7 +513,7 @@ SYSLOG_DAY_SWITCH_MESSAGE_DELAY=15000  # 15 seconds
 # Message Quality Checks
 SYSLOG_MAX_PROCESSING_DELAY=10000      # 10 seconds (receptionTime - creationTime)
 SYSLOG_MAX_RECEPTION_DELAY=2000        # 2 seconds
-SYSLOG_NO_DELAY_CHECK_LOGGERS=VipifMessageRecorder1,VipifMessageRecorder2
+SYSLOG_NO_DELAY_CHECK_LOGGERS=
 
 # Heartbeat (optional)
 HEARTBEAT_ENABLED=false

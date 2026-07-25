@@ -102,7 +102,7 @@ SYSLOG_FLUSH_INTERVAL=5000             # 5 seconds
 
 # Message Quality
 SYSLOG_MAX_PROCESSING_DELAY=10000      # 10 seconds
-SYSLOG_NO_DELAY_CHECK_LOGGERS=VipifMessageRecorder1,VipifMessageRecorder2
+SYSLOG_NO_DELAY_CHECK_LOGGERS=
 
 # Heartbeat (optional)
 HEARTBEAT_ENABLED=false
