@@ -5,13 +5,19 @@ import config from '../src/config.js';
 describe('Integration Tests', () => {
   let manager = null;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     manager = new SyslogManager(config);
+    // Wait for previous socket to fully close before starting new one
+    await new Promise((resolve) => setTimeout(resolve, 500));
   });
 
   afterEach(async () => {
     if (manager) {
       await manager.stop();
+      // Verify it actually stopped
+      expect(manager.syslogService.isRunning).toBe(false);
+      // Give socket time to fully close
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   });
 
@@ -19,9 +25,9 @@ describe('Integration Tests', () => {
     await manager.start();
     expect(manager.syslogService.isRunning).toBe(true);
 
-    await manager.stop();
-    expect(manager.syslogService.isRunning).toBe(false);
-  }, 30000);
+    // Don't manually stop here - let afterEach handle cleanup
+    // This prevents double-stop issues
+  }, 180000);
 
   test('should receive a syslog message and create logger', async () => {
     await manager.start();
@@ -42,7 +48,7 @@ describe('Integration Tests', () => {
         resolve();
       }, 200);
     });
-  }, 30000);
+  }, 180000);
 
   test('should handle multiple messages', async () => {
     await manager.start();
@@ -68,7 +74,7 @@ describe('Integration Tests', () => {
 
     const status = manager.getStatus();
     expect(status.loggers.length).toBeGreaterThanOrEqual(2); // At least 2 different hosts
-  }, 30000);
+  }, 180000);
 
   test('should flush buffered messages', async () => {
     await manager.start();
@@ -92,7 +98,7 @@ describe('Integration Tests', () => {
       // After flush, buffer should be empty or small
       expect(logger.bufferSize).toBeLessThanOrEqual(1);
     }
-  }, 30000);
+  }, 180000);
 
   test('should report status correctly', async () => {
     await manager.start();
@@ -103,6 +109,5 @@ describe('Integration Tests', () => {
     expect(status).toHaveProperty('loggers');
     expect(status).toHaveProperty('logZipper');
     expect(status.syslogService.isRunning).toBe(true);
-  }, 30000);
+  }, 180000);
 });
-

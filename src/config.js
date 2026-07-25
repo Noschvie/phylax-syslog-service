@@ -36,7 +36,7 @@ const validateDirectory = (dirPath, name) => {
     fs.accessSync(dirPath, fs.constants.W_OK);
     return dirPath;
   } catch (error) {
-    throw new Error(`${name} directory is not accessible: ${dirPath}. Error: ${error.message}`);
+    throw new Error(`${name} directory is not accessible: ${dirPath}. Error: ${error.message}`, { cause: error });
   }
 };
 
@@ -74,6 +74,9 @@ const config = {
     'SYSLOG_UNZIPPED_FILE_SIZE_LIMIT',
   ),
   syslogDateTimeFormat: process.env.SYSLOG_DATE_TIME_FORMAT || 'yyyy-MM-dd HH:mm:ss.fff',
+  syslogLogFormat: process.env.SYSLOG_LOG_FORMAT || 'standard',
+  // standard: TIMESTAMP HOSTNAME [TAG] MESSAGE
+  // extended: RECEPTION_TIME SENDER_ADDRESS TIMESTAMP HOSTNAME [TAG] MESSAGE
 
   // Syslog Service Timings
   syslogFlushInterval: validatePositiveNumber(
@@ -99,8 +102,10 @@ const config = {
     0,
   ),
   syslogNoDelayCheckLoggers: (
-    process.env.SYSLOG_NO_DELAY_CHECK_LOGGERS || 'VipifMessageRecorder1,VipifMessageRecorder2'
-  ).split(',').map((s) => s.trim()),
+    process.env.SYSLOG_NO_DELAY_CHECK_LOGGERS
+  )
+    .split(',')
+    .map((s) => s.trim()),
 
   // Heartbeat Monitoring (Optional)
   heartbeatEnabled: validateBoolean(process.env.HEARTBEAT_ENABLED || 'false'),

@@ -33,7 +33,10 @@ class SyslogLogger {
       return;
     }
 
-    const formattedLine = message.getFormattedLine();
+    const formattedLine =
+      this.config.syslogLogFormat === 'extended'
+        ? message.getExtendedFormattedLine()
+        : message.getFormattedLine();
     this.buffer.push(formattedLine);
 
     // Check if rotation needed
@@ -102,8 +105,7 @@ class SyslogLogger {
     }
 
     // Check for size-based rotation
-    if (this.currentFileSize + this._estimateBufferSize()
-        > this.config.syslogFileSizeLimit) {
+    if (this.currentFileSize + this._estimateBufferSize() > this.config.syslogFileSizeLimit) {
       logger.info(`${this.name}: File size limit reached, rotating file`);
       this._rotateFile();
     }
@@ -183,11 +185,14 @@ class SyslogLogger {
   }
 
   /**
-   * Get the current date in YYYY-MM-DD format
+   * Get the current date in YYYY-MM-DD format (using local time, not UTC)
    */
   _getCurrentDate() {
     const now = new Date();
-    return now.toISOString().split('T')[0];
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   /**

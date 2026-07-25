@@ -52,6 +52,24 @@ const TAG_PATTERN = /^([^[\s:]+)(?:\[\d+])?:\s*(.*)$/;
 // Regex pattern for extracting priority value
 const PRIORITY_PATTERN = /^<(\d+)>/;
 
+/**
+ * Format a Date object as a local time string (not UTC)
+ * Format: YYYY-MM-DD HH:mm:ss.fff
+ */
+function formatLocalDateTime(date) {
+  if (!date) return '';
+  
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const millis = String(date.getMilliseconds()).padStart(3, '0');
+  
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${millis}`;
+}
+
 // Regex pattern for RFC 3164 timestamp (Mmm dd hh:mm:ss)
 const RFC3164_TIMESTAMP_PATTERN = /^(\w{3})\s+(\d{1,2})\s+(\d{2}):(\d{2}):(\d{2})\s+(.+)/;
 
@@ -59,7 +77,12 @@ const RFC3164_TIMESTAMP_PATTERN = /^(\w{3})\s+(\d{1,2})\s+(\d{2}):(\d{2}):(\d{2}
 const HOSTNAME_PATTERN = /^(\S+)\s+(.*)$/;
 
 // Regex pattern for ISO 8601 timestamp (YYYY-MM-DD HH:mm:ss,fff)
-const ISO8601_TIMESTAMP_PATTERN = /^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2}),(\d{3})\s+(.+)/;
+const ISO8601_TIMESTAMP_PATTERN =
+  /^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2}),(\d{3})\s+(.+)/;
+
+// Regex pattern for RFC 5424 timestamp (2026-07-24T20:17:27.953000+01:00)
+const RFC5424_TIMESTAMP_PATTERN =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?([+-]\d{2}):(\d{2})\s+(.+)/;
 
 /**
  * Parse RFC 3164 Syslog message
@@ -67,9 +90,10 @@ const ISO8601_TIMESTAMP_PATTERN = /^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\
  * where PRI = Facility * 8 + Severity
  */
 class SyslogMessage {
-  constructor(rawMessage, receptionTime = new Date()) {
+  constructor(rawMessage, receptionTime = new Date(), senderAddress = null) {
     this.rawMessage = rawMessage;
     this.receptionTime = receptionTime;
+    this.senderAddress = senderAddress;
     this.timestamp = null;
     this.hostname = null;
     this.tag = null;
@@ -86,12 +110,15 @@ class SyslogMessage {
 
   _parse() {
     try {
-      // Try RFC 3164 format first
-      if (!this._parseRfc3164()) {
-        // Try Phylax extended format (ISO 8601)
-        if (!this._parsePhylaxFormat()) {
-          // Fallback to raw message
-          this._parseFallback();
+      // Try RFC 5424 format first (most specific)
+      if (!this._parseRfc5424()) {
+        // Try RFC 3164 format
+        if (!this._parseRfc3164()) {
+          // Try Phylax extended format (ISO 8601)
+          if (!this._parsePhylaxFormat()) {
+            // Fallback to raw message
+            this._parseFallback();
+          }
         }
       }
     } catch (error) {
@@ -149,13 +176,13 @@ class SyslogMessage {
     const hostnameMatch = remaining.match(HOSTNAME_PATTERN);
     if (!hostnameMatch) {
       const [firstWord] = remaining.split(/\s+/);
-      this.hostname = firstWord;
+      this.hostname = firstWord || this.senderAddress || 'unknown';
       this.message = remaining;
       return true;
     }
 
     const [, hostname, messageWithTag] = hostnameMatch;
-    this.hostname = hostname;
+    this.hostname = hostname || this.senderAddress || 'unknown';
 
     // Parse tag (usually in format "tag:" or "tag[pid]:")
     const tagMatch = messageWithTag.match(TAG_PATTERN);
@@ -167,6 +194,86 @@ class SyslogMessage {
       this.tag = null;
       this.message = messageWithTag;
     }
+
+    return true;
+  }
+
+  /**
+   * Parse RFC 5424 format: <PRI>VERSION TIMESTAMP HOSTNAME TAG PROCID MSGID STRUCTURED-DATA MSG
+   * Example: <134>1 2026-07-24T20:17:27.953000+01:00 tasmota-9FBF00-7936 tasmota - - - MQT: ...
+   */
+  _parseRfc5424() {
+    const priMatch = this.rawMessage.match(PRIORITY_PATTERN);
+    if (!priMatch) return false;
+
+    const priority = parseInt(priMatch[1], 10);
+    let rest = this.rawMessage.substring(priMatch[0].length).trim();
+
+    // Extract priority components
+    this.priority = priority;
+    this.facility = Math.floor(priority / 8);
+    this.level = priority % 8;
+    this.facilityName = FACILITY_NAMES[this.facility] || 'UNKNOWN';
+    this.levelName = LEVEL_NAMES[this.level] || 'UNKNOWN';
+
+    // Skip version (usually "1")
+    const versionMatch = rest.match(/^(\d+)\s+(.+)/);
+    if (!versionMatch) return false;
+    rest = versionMatch[2];
+
+    // Parse RFC 5424 timestamp with timezone
+    const tsMatch = rest.match(RFC5424_TIMESTAMP_PATTERN);
+    if (!tsMatch) return false;
+
+    // eslint-disable-next-line no-unused-vars
+    const [, year, month, day, hour, minute, second, fractional, tzHours, tzMinutes, remaining] = tsMatch;
+
+    // Parse timestamp with timezone offset
+    // RFC 5424 timestamp includes timezone like: 2026-07-25T15:13:15+02:00
+    // We need to convert from the timezone-aware time to UTC for storage
+    const tzOffsetMinutes = (parseInt(tzHours, 10) * 60 + parseInt(tzMinutes, 10));
+
+    // Create date from the components (treating them as UTC, then offset)
+    const dateString = `${year}-${month}-${day}T${hour}:${minute}:${second}${fractional ? '.' + fractional : ''}Z`;
+    let parsedDate = new Date(dateString);
+
+    // Adjust for timezone offset (subtract the offset to get UTC)
+    // If timestamp says +02:00, we subtract 2 hours to get UTC
+    parsedDate = new Date(parsedDate.getTime() - (tzOffsetMinutes * 60 * 1000));
+
+    this.timestamp = parsedDate;
+
+    // Parse hostname, tag, procid, msgid, and message
+    const parts = remaining.trim().split(/\s+/);
+    if (parts.length < 1) return false;
+
+    this.hostname = parts[0] || this.senderAddress || 'unknown';
+
+    // RFC 5424 format: HOSTNAME TAG PROCID MSGID STRUCTURED-DATA MSG
+    // "-" means field is not present
+    const tag = parts[1] || '-';
+    this.tag = tag !== '-' ? tag : null;
+
+    // Skip TAG, PROCID, MSGID fields (always present, can be "-")
+    let messageIdx = 1; // Start after hostname
+    messageIdx++; // Skip TAG
+    messageIdx++; // Skip PROCID
+    messageIdx++; // Skip MSGID
+
+    // Skip STRUCTURED-DATA if it's "-" or starts with "["
+    if (messageIdx < parts.length) {
+      if (parts[messageIdx] === '-' || parts[messageIdx].startsWith('[')) {
+        messageIdx++;
+      }
+    }
+
+    // Skip any additional '[...]' structured data blocks that might be present
+    while (messageIdx < parts.length && parts[messageIdx].startsWith('[')) {
+      messageIdx++;
+    }
+
+    // Rest is the message
+    this.message = parts.slice(messageIdx).join(' ') || '';
 
     return true;
   }
@@ -208,13 +315,13 @@ class SyslogMessage {
     const hostnameMatch = remaining.match(HOSTNAME_PATTERN);
     if (!hostnameMatch) {
       const [firstWord] = remaining.split(/\s+/);
-      this.hostname = firstWord;
+      this.hostname = firstWord || this.senderAddress || 'unknown';
       this.message = remaining;
       return true;
     }
 
     const [, hostname, messageWithTag] = hostnameMatch;
-    this.hostname = hostname;
+    this.hostname = hostname || this.senderAddress || 'unknown';
 
     // Parse tag
     const tagMatch = messageWithTag.match(TAG_PATTERN);
@@ -234,7 +341,7 @@ class SyslogMessage {
    * Fallback: treat the entire message as raw
    */
   _parseFallback() {
-    this.hostname = 'unknown';
+    this.hostname = this.senderAddress || 'unknown';
     this.message = this.rawMessage;
     this.tag = null;
     this.timestamp = this.receptionTime;
@@ -250,21 +357,55 @@ class SyslogMessage {
    * Helper to get month index from month name (0-11)
    */
   _getMonthIndex(monthName) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return months.indexOf(monthName);
   }
 
   /**
    * Get a formatted log line (for writing to file)
+   * Format: TIMESTAMP HOSTNAME [TAG] MESSAGE (using local time, not UTC)
    */
   getFormattedLine() {
     const timestamp = this.timestamp
-      ? this.timestamp.toISOString().replace('T', ' ').substring(0, 23)
-      : new Date(this.receptionTime).toISOString().replace('T', ' ').substring(0, 23);
+      ? formatLocalDateTime(this.timestamp)
+      : formatLocalDateTime(new Date(this.receptionTime));
 
     const tag = this.tag ? `[${this.tag}]` : '';
-    return `${timestamp} ${this.hostname} ${tag} ${this.message}`;
+    return `${timestamp} ${this.hostname} ${tag} ${this.message}`.trim();
+  }
+
+  /**
+   * Get an extended formatted log line with reception time and sender address
+   * Format: RECEPTION_TIME SENDER_ADDRESS TIMESTAMP HOSTNAME [TAG] MESSAGE (using local time, not UTC)
+   * Useful for debugging message routing and delays
+   */
+  getExtendedFormattedLine() {
+    const receptionTimestamp =
+      this.receptionTime instanceof Date
+        ? formatLocalDateTime(this.receptionTime)
+        : formatLocalDateTime(new Date(this.receptionTime));
+
+    const messageTimestamp = this.timestamp
+      ? formatLocalDateTime(this.timestamp)
+      : receptionTimestamp;
+
+    const senderAddr = this.senderAddress || '-';
+    const tag = this.tag ? `[${this.tag}]` : '';
+
+    return `${receptionTimestamp} ${senderAddr} ${messageTimestamp} ${this.hostname} ${tag} ${this.message}`.trim();
   }
 
   /**
@@ -273,9 +414,8 @@ class SyslogMessage {
   toJSON() {
     return {
       timestamp: this.timestamp?.toISOString(),
-      receptionTime: this.receptionTime instanceof Date
-        ? this.receptionTime.toISOString()
-        : this.receptionTime,
+      receptionTime:
+        this.receptionTime instanceof Date ? this.receptionTime.toISOString() : this.receptionTime,
       hostname: this.hostname,
       tag: this.tag,
       message: this.message,

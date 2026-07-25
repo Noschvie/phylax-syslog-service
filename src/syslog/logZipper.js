@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import archiver from 'archiver';
+import { ZipArchive } from 'archiver';
 import { getLogger } from '../utils/logger.js';
 import WorkQueue from '../utils/workQueue.js';
 
@@ -14,6 +14,7 @@ class LogZipper {
   constructor(config) {
     this.config = config;
     this.workQueue = new WorkQueue('LogZipperQueue');
+    this.isStopped = false;
   }
 
   /**
@@ -26,8 +27,15 @@ class LogZipper {
 
   /**
    * Stop the zipper service gracefully
+   * Safe to call multiple times (idempotent)
    */
   async stop() {
+    if (this.isStopped) {
+      logger.debug('Log zipper already stopped');
+      return;
+    }
+    this.isStopped = true;
+
     await this.workQueue.stop();
     logger.info('Log zipper stopped');
   }
@@ -41,7 +49,7 @@ class LogZipper {
       return;
     }
 
-    const task = async () => {
+    const task = async() => {
       await this._compressFile(filePath);
     };
 
@@ -68,7 +76,7 @@ class LogZipper {
 
       // Create output stream
       const output = fs.createWriteStream(zipPath);
-      const archive = archiver('zip', { zlib: { level: 9 } });
+      const archive = new ZipArchive({ zlib: { level: 9 } });
 
       return new Promise((resolve, reject) => {
         output.on('close', () => {

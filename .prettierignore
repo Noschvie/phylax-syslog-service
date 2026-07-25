@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+logs/
+*.yaml
+*.yml
+*.md
+.prettierrc
+.eslintignore
+eslint.config.js
+jest.config.js
+Dockerfile
+docker-compose*.yml

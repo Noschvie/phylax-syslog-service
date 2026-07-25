@@ -1,8 +1,8 @@
 # Phylax Syslog Service
 
-[![Node.js](https://img.shields.io/badge/Node.js-18%2B-green)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-26%2B-green)](https://nodejs.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow)](## 📄 License)
+[![License](https://img.shields.io/badge/License-MIT-yellow)](#-license)
 
 Containerized syslog message receiver with RFC 3164 compliance, automatic log rotation, and compression. Receives syslog messages via UDP, routes them to per-logger files, and handles automatic file rotation and ZIP compression.
 
@@ -36,6 +36,14 @@ tail -f logs/testhost.log
 ### Docker Deployment
 
 ```bash
+# Configure (copy template and adjust as needed)
+cp .env.example .env
+
+# For production, edit .env and set:
+#   NODE_ENV=production
+#   SYSLOG_LOG_DIR=/var/log/syslog
+#   HEARTBEAT_ENABLED=true (recommended)
+
 # Build and start
 docker-compose up -d
 
@@ -45,6 +53,10 @@ docker-compose logs -f
 # Stop
 docker-compose down
 ```
+
+> **Note 1:** The service logs use **local time** by default. For Docker, the timezone is set via the `TZ` environment variable in `.env`. See [DOCKER_TIMEZONE.md](DOCKER_TIMEZONE.md) for detailed configuration options.
+
+> **Note 2:** All configuration comes from the `.env` file. The `.env.example` template includes setup guides for all scenarios (local dev, docker dev, docker production). See [ENV_CONSOLIDATION_SUMMARY.md](ENV_CONSOLIDATION_SUMMARY.md) for details.
 
 ---
 
@@ -65,8 +77,8 @@ docker-compose down
 
 ## 📋 System Requirements
 
-- **Node.js:** 18.x or higher
-- **npm:** 9.x or higher
+- **Node.js:** 26.x or higher
+- **npm:** 10.x or higher
 - **Docker:** 20.x (optional, for containerization)
 - **UDP Port:** 514 (configurable)
 
@@ -110,7 +122,7 @@ SYSLOG_FLUSH_INTERVAL=5000             # 5 seconds
 
 # Message Quality Checks (optional)
 SYSLOG_MAX_PROCESSING_DELAY=10000      # 10 seconds
-SYSLOG_NO_DELAY_CHECK_LOGGERS=VipifMessageRecorder
+SYSLOG_NO_DELAY_CHECK_LOGGERS=
 
 # Heartbeat (optional)
 HEARTBEAT_ENABLED=false
@@ -387,6 +399,6 @@ MIT License – See [LICENSE](./LICENSE) for details
 
 ## 🔄 Version & Status
 
-- **Version:** 1.0.0-alpha
-- **Status:** 🟡 In Development
-- **Last Updated:** 2024-07-24
+- **Version:** 1.0.0
+- **Status:** ✅ Stable
+- **Last Updated:** 2026-07-25

@@ -15,6 +15,7 @@ class SyslogManager {
     this.syslogService = new SyslogService(config, (message) => this._onSyslogMessage(message));
     this.loggers = new Map(); // hostname -> SyslogLogger
     this.logZipper = new LogZipper(config);
+    this.isStopped = false;
   }
 
   /**
@@ -23,6 +24,9 @@ class SyslogManager {
   async start() {
     try {
       logger.info('Starting Syslog Manager');
+
+      // Reset stopped flag on start
+      this.isStopped = false;
 
       // Start work queue (used by zipper)
       this.logZipper.start();
@@ -41,8 +45,16 @@ class SyslogManager {
 
   /**
    * Stop the manager and all services gracefully
+   * Safe to call multiple times (idempotent)
    */
   async stop() {
+    // Prevent multiple simultaneous stops
+    if (this.isStopped) {
+      logger.debug('Stop already in progress or completed');
+      return;
+    }
+    this.isStopped = true;
+
     try {
       logger.info('Stopping Syslog Manager');
 
@@ -57,6 +69,10 @@ class SyslogManager {
       // Stop compression queue
       await this.logZipper.stop();
       logger.info('Log zipper stopped');
+
+      // Clear all loggers
+      this.loggers.clear();
+      logger.info('All loggers cleared');
 
       logger.info('Syslog Manager fully stopped');
     } catch (error) {
@@ -85,10 +101,8 @@ class SyslogManager {
       let syslogLogger = this.loggers.get(loggerKey);
 
       if (!syslogLogger) {
-        syslogLogger = new SyslogLogger(
-          this.config,
-          loggerKey,
-          (filePath) => this.logZipper.queueForCompression(filePath),
+        syslogLogger = new SyslogLogger(this.config, loggerKey, (filePath) =>
+          this.logZipper.queueForCompression(filePath),
         );
         this.loggers.set(loggerKey, syslogLogger);
         logger.info(`Created logger for: ${loggerKey}`);
