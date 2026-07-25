@@ -52,6 +52,37 @@ const TAG_PATTERN = /^([^[\s:]+)(?:\[\d+])?:\s*(.*)$/;
 // Regex pattern for extracting priority value
 const PRIORITY_PATTERN = /^<(\d+)>/;
 
+/**
+ * Format a Date object as a local time string (not UTC)
+ * Format: YYYY-MM-DD HH:mm:ss.fff
+ */
+function formatLocalDateTime(date) {
+  if (!date) return '';
+  
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const millis = String(date.getMilliseconds()).padStart(3, '0');
+  
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${millis}`;
+}
+
+/**
+ * Get local date in YYYY-MM-DD format
+ */
+function getLocalDateString(date) {
+  if (!date) return '';
+  
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+}
+
 // Regex pattern for RFC 3164 timestamp (Mmm dd hh:mm:ss)
 const RFC3164_TIMESTAMP_PATTERN = /^(\w{3})\s+(\d{1,2})\s+(\d{2}):(\d{2}):(\d{2})\s+(.+)/;
 
@@ -347,12 +378,12 @@ class SyslogMessage {
 
   /**
    * Get a formatted log line (for writing to file)
-   * Format: TIMESTAMP HOSTNAME [TAG] MESSAGE
+   * Format: TIMESTAMP HOSTNAME [TAG] MESSAGE (using local time, not UTC)
    */
   getFormattedLine() {
     const timestamp = this.timestamp
-      ? this.timestamp.toISOString().replace('T', ' ').substring(0, 23)
-      : new Date(this.receptionTime).toISOString().replace('T', ' ').substring(0, 23);
+      ? formatLocalDateTime(this.timestamp)
+      : formatLocalDateTime(new Date(this.receptionTime));
 
     const tag = this.tag ? `[${this.tag}]` : '';
     return `${timestamp} ${this.hostname} ${tag} ${this.message}`.trim();
@@ -360,17 +391,17 @@ class SyslogMessage {
 
   /**
    * Get an extended formatted log line with reception time and sender address
-   * Format: RECEPTION_TIME SENDER_ADDRESS TIMESTAMP HOSTNAME [TAG] MESSAGE
+   * Format: RECEPTION_TIME SENDER_ADDRESS TIMESTAMP HOSTNAME [TAG] MESSAGE (using local time, not UTC)
    * Useful for debugging message routing and delays
    */
   getExtendedFormattedLine() {
     const receptionTimestamp =
       this.receptionTime instanceof Date
-        ? this.receptionTime.toISOString().replace('T', ' ').substring(0, 23)
-        : new Date(this.receptionTime).toISOString().replace('T', ' ').substring(0, 23);
+        ? formatLocalDateTime(this.receptionTime)
+        : formatLocalDateTime(new Date(this.receptionTime));
 
     const messageTimestamp = this.timestamp
-      ? this.timestamp.toISOString().replace('T', ' ').substring(0, 23)
+      ? formatLocalDateTime(this.timestamp)
       : receptionTimestamp;
 
     const senderAddr = this.senderAddress || '-';

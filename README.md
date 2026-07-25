@@ -36,6 +36,14 @@ tail -f logs/testhost.log
 ### Docker Deployment
 
 ```bash
+# Configure (copy template and adjust as needed)
+cp .env.example .env
+
+# For production, edit .env and set:
+#   NODE_ENV=production
+#   SYSLOG_LOG_DIR=/var/log/syslog
+#   HEARTBEAT_ENABLED=true (recommended)
+
 # Build and start
 docker-compose up -d
 
@@ -45,6 +53,10 @@ docker-compose logs -f
 # Stop
 docker-compose down
 ```
+
+> **Note 1:** The service logs use **local time** by default. For Docker, the timezone is set via the `TZ` environment variable in `.env`. See [DOCKER_TIMEZONE.md](DOCKER_TIMEZONE.md) for detailed configuration options.
+
+> **Note 2:** All configuration comes from the `.env` file. The `.env.example` template includes setup guides for all scenarios (local dev, docker dev, docker production). See [ENV_CONSOLIDATION_SUMMARY.md](ENV_CONSOLIDATION_SUMMARY.md) for details.
 
 ---
 

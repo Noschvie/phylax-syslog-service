@@ -185,11 +185,14 @@ class SyslogLogger {
   }
 
   /**
-   * Get the current date in YYYY-MM-DD format
+   * Get the current date in YYYY-MM-DD format (using local time, not UTC)
    */
   _getCurrentDate() {
     const now = new Date();
-    return now.toISOString().split('T')[0];
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   /**

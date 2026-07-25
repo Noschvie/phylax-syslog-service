@@ -15,8 +15,9 @@ FROM node:26-alpine
 
 WORKDIR /app
 
-# Install dumb-init to handle signals properly
-RUN apk add --no-cache dumb-init
+# Install dumb-init and timezone data
+# This allows the container to use different timezones via TZ environment variable
+RUN apk add --no-cache dumb-init tzdata
 
 # Copy from builder
 COPY --from=builder /app/node_modules ./node_modules

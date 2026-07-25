@@ -7,16 +7,29 @@ services:
     image: ghcr.io/noschvie/phylax-syslog-service:development
     container_name: phylax-syslog
     # Environment variables
+    # All configuration comes from .env file (mounted read-only)
     environment:
-      - NODE_ENV=development
-      - LOG_LEVEL=debug
-      - SYSLOG_PORT=514
-      - SYSLOG_LOG_DIR=/var/log/syslog
-      - SYSLOG_FILE_SIZE_LIMIT=52428800
-      - SYSLOG_FLUSH_INTERVAL=5000
-      - SYSLOG_MAX_PROCESSING_DELAY=10000
-      - HEARTBEAT_ENABLED=false
-      # Additional env vars from .env file
+      - NODE_ENV=${NODE_ENV:-development}
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+      - SYSLOG_PORT=${SYSLOG_PORT:-514}
+      - SYSLOG_UDP_BUFFER_SIZE=${SYSLOG_UDP_BUFFER_SIZE:-81920}
+      - SYSLOG_LOG_DIR=${SYSLOG_LOG_DIR:-/var/log/syslog}
+      - SYSLOG_FILE_SIZE_LIMIT=${SYSLOG_FILE_SIZE_LIMIT:-52428800}
+      - SYSLOG_UNZIPPED_FILE_SIZE_LIMIT=${SYSLOG_UNZIPPED_FILE_SIZE_LIMIT:-5242880}
+      - SYSLOG_DATE_TIME_FORMAT=${SYSLOG_DATE_TIME_FORMAT:-yyyy-MM-dd HH:mm:ss.fff}
+      - SYSLOG_LOG_FORMAT=${SYSLOG_LOG_FORMAT:-standard}
+      - SYSLOG_FLUSH_INTERVAL=${SYSLOG_FLUSH_INTERVAL:-5000}
+      - SYSLOG_DAY_SWITCH_MESSAGE_DELAY=${SYSLOG_DAY_SWITCH_MESSAGE_DELAY:-15000}
+      - SYSLOG_MAX_PROCESSING_DELAY=${SYSLOG_MAX_PROCESSING_DELAY:-10000}
+      - SYSLOG_MAX_RECEPTION_DELAY=${SYSLOG_MAX_RECEPTION_DELAY:-2000}
+      - SYSLOG_NO_DELAY_CHECK_LOGGERS=${SYSLOG_NO_DELAY_CHECK_LOGGERS:-VipifMessageRecorder1,VipifMessageRecorder2}
+      - HEARTBEAT_ENABLED=${HEARTBEAT_ENABLED:-false}
+      - HEARTBEAT_PORT=${HEARTBEAT_PORT:-11514}
+      - HEARTBEAT_INTERVAL=${HEARTBEAT_INTERVAL:-5000}
+      - HEARTBEAT_DESTINATION=${HEARTBEAT_DESTINATION:-127.0.0.1}
+      - SYSLOG_LOG_RETENTION_DAYS=${SYSLOG_LOG_RETENTION_DAYS:-30}
+      # Timezone from .env file
+      - TZ=${TZ:-Europe/Berlin}
     # Port mapping
     ports:
       - "514:514/udp"      # Syslog UDP port
