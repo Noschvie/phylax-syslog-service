@@ -29,7 +29,8 @@
     "docker:stop": "docker-compose down",
     "docker:logs": "docker-compose logs -f",
     "clean": "rm -rf logs/ node_modules/ dist/",
-    "healthcheck": "node -e \"require('net').createConnection({port: 514}, ()=>process.exit(0)).on('error', ()=>process.exit(1))\""
+    "healthcheck": "node -e \"require('net').createConnection({port: 514}, ()=>process.exit(0)).on('error', ()=>process.exit(1))\"",
+    "format:check": "prettier --check ."
   },
   "author": "Noschvie",
   "license": "MIT",
@@ -44,38 +45,13 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "cross-env": "^10.1.0",
-    "eslint": "^8.57.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.28.1",
+    "eslint": "^10.8.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "globals": "^17.7.0",
     "jest": "^30.4.2",
     "nodemon": "^3.0.1",
     "prettier": "^3.0.3",
     "supertest": "^7.2.2"
-  },
-  "prettier": {
-    "singleQuote": true,
-    "trailingComma": "es5",
-    "tabWidth": 2,
-    "semi": true
-  },
-  "eslintConfig": {
-    "env": {
-      "node": true,
-      "es2021": true
-    },
-    "extends": [
-      "airbnb-base"
-    ],
-    "parserOptions": {
-      "ecmaVersion": "latest",
-      "sourceType": "module"
-    },
-    "rules": {
-      "no-console": "off",
-      "no-unused-vars": "warn",
-      "import/extensions": "off",
-      "no-underscore-dangle": "off",
-      "class-methods-use-this": "off"
-    }
   }
 }
