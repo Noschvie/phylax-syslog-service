@@ -1,8 +1,8 @@
 # Phylax Syslog Service - Node.js Edition
 
-[![Node.js](https://img.shields.io/badge/Node.js-18%2B-green)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-26%2B-green)](https://nodejs.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow)](#license)
+[![License](https://img.shields.io/badge/License-MIT-yellow)](#-license)
 
 A containerized syslog message receiver, processor, and logger for the Phylax platform. Receives RFC 3164 syslog messages via UDP, routes them to per-logger files, and automatically rotates and compresses old logs.
 
@@ -118,8 +118,8 @@ See `.env.example` for all available options.
 
 ### Requirements
 
-- **Node.js:** 18.x or higher
-- **npm:** 9.x or higher
+- **Node.js:** 26.x or higher
+- **npm:** 10.x or higher
 - **Docker:** 20.x (for containerized deployment)
 
 ### Dependencies
@@ -407,11 +407,11 @@ MIT
 
 For issues, questions, or suggestions:
 - Check [ARCHITECTURE.md](./ARCHITECTURE.md) for design documentation
-- Review [test/](./test/) for usage examples
+- Review [test](./test) for usage examples
 - Check logs: `tail -f logs/PhylaxSyslogService.log`
 
 ---
 
-**Last Updated:** 2024-07-24  
-**Version:** 1.0.0-alpha  
-**Status:** 🟡 In Development
+**Last Updated:** 2026-07-25  
+**Version:** 1.0.0  
+**Status:** ✅ Stable
