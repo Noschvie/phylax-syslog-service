@@ -72,7 +72,7 @@ async function main() {
     await heartbeatSender.start();
 
     // Set up periodic flush interval
-    flushInterval = setInterval(async () => {
+    flushInterval = setInterval(async() => {
       await manager.periodicFlush();
     }, config.syslogFlushInterval);
 

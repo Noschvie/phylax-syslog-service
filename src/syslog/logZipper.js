@@ -49,7 +49,7 @@ class LogZipper {
       return;
     }
 
-    const task = async () => {
+    const task = async() => {
       await this._compressFile(filePath);
     };
 

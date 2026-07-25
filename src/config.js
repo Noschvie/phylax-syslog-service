@@ -36,7 +36,7 @@ const validateDirectory = (dirPath, name) => {
     fs.accessSync(dirPath, fs.constants.W_OK);
     return dirPath;
   } catch (error) {
-    throw new Error(`${name} directory is not accessible: ${dirPath}. Error: ${error.message}`);
+    throw new Error(`${name} directory is not accessible: ${dirPath}. Error: ${error.message}`, { cause: error });
   }
 };
 
