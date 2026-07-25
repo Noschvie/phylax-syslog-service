@@ -1,6 +1,6 @@
 {
   "name": "phylax-syslog-service",
-  "version": "1.0.0-alpha",
+  "version": "1.0.0",
   "description": "Phylax Syslog Service - Node.js Edition. Containerized syslog receiver with automatic log rotation and compression.",
   "main": "src/index.js",
   "type": "module",
