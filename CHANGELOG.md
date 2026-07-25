@@ -8,6 +8,9 @@ contributors and users to follow meaningful changes over time.
 Unreleased
 ----------
 
+2026-07-25
+----------
+
 ### Added
 - Integrated HeartbeatSender into the main application startup (src/index.js) to support periodic health monitoring via UDP heartbeat messages.
 - Local time support in log files with timezone configuration via TZ environment variable
