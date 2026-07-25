@@ -61,50 +61,54 @@ describe('SyslogMessage', () => {
     });
   });
 
-   describe('RFC 5424 Parsing', () => {
-     test('should parse RFC 5424 format with ISO timestamp', () => {
-       const msg = new SyslogMessage('<134>1 2026-07-24T20:17:27.953000+01:00 tasmota-9FBF00-7936 tasmota - - - MQT: tele/tasmota_9FBF00/STATE = {"test":"value"}');
+  describe('RFC 5424 Parsing', () => {
+    test('should parse RFC 5424 format with ISO timestamp', () => {
+      const msg = new SyslogMessage(
+        '<134>1 2026-07-24T20:17:27.953000+01:00 tasmota-9FBF00-7936 tasmota - - - MQT: tele/tasmota_9FBF00/STATE = {"test":"value"}',
+      );
 
-       expect(msg.priority).toBe(134);
-       expect(msg.facility).toBe(16); // LOCAL0
-       expect(msg.level).toBe(6); // INFO
-       expect(msg.hostname).toBe('tasmota-9FBF00-7936');
-       expect(msg.tag).toBe('tasmota');
-       expect(msg.message).toContain('MQT:');
-       expect(msg.message).not.toContain('<134>');
-     });
+      expect(msg.priority).toBe(134);
+      expect(msg.facility).toBe(16); // LOCAL0
+      expect(msg.level).toBe(6); // INFO
+      expect(msg.hostname).toBe('tasmota-9FBF00-7936');
+      expect(msg.tag).toBe('tasmota');
+      expect(msg.message).toContain('MQT:');
+      expect(msg.message).not.toContain('<134>');
+    });
 
-     test('should parse RFC 5424 format without tag', () => {
-       const msg = new SyslogMessage('<14>1 2026-07-24T20:17:27.953000+01:00 server01 - - - Raw message');
+    test('should parse RFC 5424 format without tag', () => {
+      const msg = new SyslogMessage(
+        '<14>1 2026-07-24T20:17:27.953000+01:00 server01 - - - Raw message',
+      );
 
-       expect(msg.hostname).toBe('server01');
-       expect(msg.tag).toBeNull();
-       expect(msg.message).toBe('Raw message');
-     });
-   });
+      expect(msg.hostname).toBe('server01');
+      expect(msg.tag).toBeNull();
+      expect(msg.message).toBe('Raw message');
+    });
+  });
 
-   describe('Phylax Extended Format Parsing', () => {
-     test('should parse Phylax ISO 8601 format', () => {
-       const msg = new SyslogMessage('<14>2024-07-24 10:30:45,123 server01 MyApp: Hello');
+  describe('Phylax Extended Format Parsing', () => {
+    test('should parse Phylax ISO 8601 format', () => {
+      const msg = new SyslogMessage('<14>2024-07-24 10:30:45,123 server01 MyApp: Hello');
 
-       expect(msg.priority).toBe(14);
-       expect(msg.facility).toBe(1); // USER
-       expect(msg.level).toBe(6); // INFO
-       expect(msg.hostname).toBe('server01');
-       expect(msg.tag).toBe('MyApp');
-       expect(msg.message).toBe('Hello');
-       expect(msg.timestamp.getFullYear()).toBe(2024);
-       expect(msg.timestamp.getMonth()).toBe(6); // July (0-based)
-       expect(msg.timestamp.getDate()).toBe(24);
-     });
+      expect(msg.priority).toBe(14);
+      expect(msg.facility).toBe(1); // USER
+      expect(msg.level).toBe(6); // INFO
+      expect(msg.hostname).toBe('server01');
+      expect(msg.tag).toBe('MyApp');
+      expect(msg.message).toBe('Hello');
+      expect(msg.timestamp.getFullYear()).toBe(2024);
+      expect(msg.timestamp.getMonth()).toBe(6); // July (0-based)
+      expect(msg.timestamp.getDate()).toBe(24);
+    });
 
-     test('should handle Phylax format without tag', () => {
-       const msg = new SyslogMessage('<14>2024-07-24 10:30:45,123 server01 Raw message');
+    test('should handle Phylax format without tag', () => {
+      const msg = new SyslogMessage('<14>2024-07-24 10:30:45,123 server01 Raw message');
 
-       expect(msg.hostname).toBe('server01');
-       expect(msg.message).toBe('Raw message');
-     });
-   });
+      expect(msg.hostname).toBe('server01');
+      expect(msg.message).toBe('Raw message');
+    });
+  });
 
   describe('Fallback Parsing', () => {
     test('should fallback to raw message when parsing fails', () => {
@@ -153,4 +157,3 @@ describe('SyslogMessage', () => {
     });
   });
 });
-

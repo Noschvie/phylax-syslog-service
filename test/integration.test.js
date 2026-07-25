@@ -41,7 +41,7 @@ describe('Integration Tests', () => {
         client.close();
       });
 
-    // Wait a bit for processing
+      // Wait a bit for processing
       setTimeout(() => {
         const status = manager.getStatus();
         expect(status.loggers.length).toBeGreaterThan(0);
@@ -105,7 +105,7 @@ describe('Integration Tests', () => {
 
     const status = manager.getStatus();
 
-   expect(status).toHaveProperty('syslogService');
+    expect(status).toHaveProperty('syslogService');
     expect(status).toHaveProperty('loggers');
     expect(status).toHaveProperty('logZipper');
     expect(status.syslogService.isRunning).toBe(true);
