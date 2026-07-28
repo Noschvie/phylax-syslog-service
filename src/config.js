@@ -102,7 +102,7 @@ const config = {
     0,
   ),
   syslogNoDelayCheckLoggers: (
-    process.env.SYSLOG_NO_DELAY_CHECK_LOGGERS
+    process.env.SYSLOG_NO_DELAY_CHECK_LOGGERS || 'PhylaxSyslogService'
   )
     .split(',')
     .map((s) => s.trim()),
