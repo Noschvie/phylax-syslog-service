@@ -36,6 +36,8 @@ jobs:
       - name: Run integration tests
         run: npm run test:integration
         timeout-minutes: 5
+        env:
+          SYSLOG_PORT: '5514'
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
