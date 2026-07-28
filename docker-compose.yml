@@ -65,16 +65,7 @@ services:
         max-size: "100m"
         max-file: "3"
 
-    # Health check (Docker-level)
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('net').createConnection({port: 514}, ()=>process.exit(0)).on('error', ()=>process.exit(1))"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-
-    # Signal handling
-    stop_signal: SIGTERM
+    # Graceful shutdown
     stop_grace_period: 30s
 
 # Network configuration

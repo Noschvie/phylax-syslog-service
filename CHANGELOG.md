@@ -8,6 +8,12 @@ contributors and users to follow meaningful changes over time.
 Unreleased
 ----------
 
+### Fixed
+- Docker health check was always failing: `docker-compose.yml` used a TCP check on port 514 (which is UDP) via `net.createConnection`, overriding the correct `curl`-based HTTP check defined in the Dockerfile. Fixed by replacing the health check in `docker-compose.yml` with `curl -fsS http://127.0.0.1:8080/health`, consistent with the Dockerfile.
+
+### Changed
+- Removed redundant `stop_signal: SIGTERM` from `docker-compose.yml` (Docker default).
+
 2026-07-25
 ----------
 
