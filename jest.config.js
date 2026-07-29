@@ -4,5 +4,8 @@ export default {
   coveragePathIgnorePatterns: ['/node_modules/'],
   testMatch: ['**/test/**/*.test.js'],
   collectCoverageFrom: ['src/**/*.js'],
-  testTimeout: 180000,
+  testTimeout: 30000,
+  forceExit: true,
+  detectOpenHandles: true,
+  globalSetup: './test/jest.globalSetup.js',
 };

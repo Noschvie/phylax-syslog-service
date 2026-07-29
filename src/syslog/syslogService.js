@@ -33,6 +33,10 @@ class SyslogService {
 
         this.socket.on('error', (error) => {
           logger.error('Socket error', { error: error.message });
+          if (!this.isRunning) {
+            // Error occurred before socket was bound - reject the start() promise
+            reject(error);
+          }
         });
 
         this.socket.on('listening', () => {

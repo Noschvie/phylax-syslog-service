@@ -1,3 +1,5 @@
+import http from 'node:http';
+
 import logger from './utils/logger.js';
 import config from './config.js';
 import SyslogManager from './syslog/syslogManager.js';
@@ -6,6 +8,21 @@ import HeartbeatSender from './heartbeat/heartbeatSender.js';
 let manager = null;
 let heartbeatSender = null;
 let flushInterval = null;
+
+const healthServer = http.createServer((req, res) => {
+  if (req.url !== '/health') {
+    res.writeHead(404);
+    return res.end();
+  }
+  const status = manager.getStatus();
+  if (status.syslogService.isRunning) {
+    res.writeHead(200);
+    res.end('OK');
+  } else {
+    res.writeHead(503);
+    res.end('NOT READY');
+  }
+});
 
 /**
  * Handle a graceful shutdown
@@ -75,6 +92,8 @@ async function main() {
     flushInterval = setInterval(async() => {
       await manager.periodicFlush();
     }, config.syslogFlushInterval);
+
+    healthServer.listen(8080, '127.0.0.1');
 
     logger.info('Application fully started and ready to receive syslog messages');
     logger.info(`Listening on port ${config.syslogPort} (UDP)`);

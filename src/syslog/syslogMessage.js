@@ -225,7 +225,6 @@ class SyslogMessage {
     const tsMatch = rest.match(RFC5424_TIMESTAMP_PATTERN);
     if (!tsMatch) return false;
 
-    // eslint-disable-next-line no-unused-vars
     const [, year, month, day, hour, minute, second, fractional, tzHours, tzMinutes, remaining] = tsMatch;
 
     // Parse timestamp with timezone offset
