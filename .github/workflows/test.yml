@@ -40,7 +40,7 @@ jobs:
           SYSLOG_PORT: '5514'
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           files: ./coverage/coverage-final.json
           flags: unittests
