@@ -8,6 +8,9 @@ contributors and users to follow meaningful changes over time.
 Unreleased
 ----------
 
+2026-08-12
+----------
+
 ### Added
 - New GitHub Actions workflow to clean up GHCR (GitHub Container Registry) images (`cleanup-ghcr.yml`).
 
