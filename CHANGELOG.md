@@ -8,6 +8,19 @@ contributors and users to follow meaningful changes over time.
 Unreleased
 ----------
 
+2026-08-12
+----------
+
+### Added
+- New GitHub Actions workflow to clean up GHCR (GitHub Container Registry) images (`cleanup-ghcr.yml`).
+
+### Changed
+- Updated Node.js version to 26 in GitHub Actions workflows.
+- Extended Dependabot configuration to cover multiple package ecosystems (npm, Docker, GitHub Actions).
+
+### Security
+- Bumped transitive dependency `brace-expansion` (5.0.8→5.0.9, 1.1.16→1.1.18, 2.1.2→2.1.4) to pick up upstream fixes (Dependabot, PR #9).
+
 2026-07-28
 ----------
 
@@ -64,6 +77,10 @@ Guidelines
 - Use categories such as Added, Changed, Deprecated, Removed, Fixed, Security.
 - Keep entries under Unreleased until you create a release tag, then move them
   under the release date/version.
+- Routine dependency updates (dev tooling, transitive dependencies, and
+  GitHub Actions) are tracked via Dependabot PRs and the Git history, and are
+  not listed individually here. Only dependency changes with user-visible impact
+  (runtime dependencies, security fixes, or changed system requirements) get an entry.
 
 Example entry
 -------------
