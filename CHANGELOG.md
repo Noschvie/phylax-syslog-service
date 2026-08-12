@@ -8,6 +8,23 @@ contributors and users to follow meaningful changes over time.
 Unreleased
 ----------
 
+### Added
+- New GitHub Actions workflow to clean up GHCR (GitHub Container Registry) images (`cleanup-ghcr.yml`).
+
+### Changed
+- Updated `globals` dev dependency from 17.9.0 to 17.11.0 (manual update; Dependabot had filtered the newer versions due to cooldown and the version range in `package.json` already covered them).
+- Bumped `eslint` (dev) from 10.8.0 to 10.8.1 (Dependabot, minor-and-patch group, PR #10).
+- Bumped `globals` (dev) from 17.8.0 to 17.9.0 (Dependabot, minor-and-patch group, PR #8).
+- Bumped GitHub Actions `docker/login-action` from 4.5.2 to 4.6.0 (Dependabot, PR #7).
+- Bumped GitHub Actions `docker/login-action` from 4 to 4.5.2 (Dependabot, PR #6).
+- Updated Node.js version to 26 in GitHub Actions workflows.
+- Extended Dependabot configuration to cover multiple package ecosystems (npm, Docker, GitHub Actions).
+- Bumped GitHub Actions `actions/setup-node` from 5 to 7 (Dependabot, PR #4).
+- Bumped GitHub Actions `codecov/codecov-action` from 5 to 7 (Dependabot, PR #5).
+
+### Security
+- Bumped transitive dependency `brace-expansion` (5.0.8→5.0.9, 1.1.16→1.1.18, 2.1.2→2.1.4) to pick up upstream fixes (Dependabot, PR #9).
+
 2026-07-28
 ----------
 
