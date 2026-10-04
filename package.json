@@ -38,7 +38,7 @@
   "license": "MIT",
   "dependencies": {
     "archiver": "^8.0.0",
-    "dotenv": "^18.0.4",
+    "dotenv": "^18.0.5",
     "ini": "^7.0.0",
     "node-cron": "^4.6.0",
     "pino": "^10.3.1",
@@ -49,7 +49,7 @@
     "cross-env": "^10.1.0",
     "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
-    "globals": "^17.12.0",
+    "globals": "^17.13.0",
     "jest": "^30.5.2",
     "nodemon": "^3.0.1",
     "prettier": "^3.9.9",
