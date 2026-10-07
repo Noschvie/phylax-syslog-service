@@ -8,6 +8,9 @@ contributors and users to follow meaningful changes over time.
 Unreleased
 ----------
 
+2026-10-07
+----------
+
 2026-08-12
 ----------
 
