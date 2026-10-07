@@ -8,8 +8,17 @@ contributors and users to follow meaningful changes over time.
 Unreleased
 ----------
 
+### Changed
+
+- Updated project dependencies to their latest compatible versions.
+
 2026-10-07
 ----------
+
+### Changed
+
+- Updated project dependencies to their latest compatible versions.
+- No functional changes.
 
 2026-08-12
 ----------
