@@ -10,7 +10,7 @@ Unreleased
 
 ### Changed
 
-- Updated project dependencies to their latest compatible versions.
+- Updated project dependencies.
 
 2026-10-07
 ----------
